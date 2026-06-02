@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Producto - Tierra Dorada</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav id="navbar">
+    <div class="nav-logo" onclick="window.location.href='index.html'">Tierra <span>Dorada</span></div>
+    <ul class="nav-links">
+      <li><a href="index.html#producto">Productos</a></li>
+      <li><a href="index.html#nosotros">Nosotros</a></li>
+      <li><a href="index.html#proceso">Proceso</a></li>
+    </ul>
+    <button class="nav-cta" onclick="window.location.href='carrito.html'">Carrito <span class="cart-count" id="cart-count">0</span></button>
+  </nav>
+
+  <main class="page-shell">
+    <button class="btn-secondary page-back" onclick="window.location.href='index.html#producto'">← Volver al catálogo</button>
+
+    <section class="product-detail">
+      <div class="product-detail-media">
+        <img id="product-image" src="" alt="">
+      </div>
+      <div class="product-detail-info">
+        <div class="section-eyebrow" id="product-eyebrow">Producto</div>
+        <h1 class="section-title" id="product-title">Cacao</h1>
+        <p class="product-detail-desc" id="product-desc"></p>
+        <div class="product-tags" id="product-tags"></div>
+
+        <div class="product-detail-panel">
+          <div>
+            <p class="detail-label">Presentación</p>
+            <strong>Bolsa de 500g</strong>
+          </div>
+          <div>
+            <p class="detail-label">Origen</p>
+            <strong>El Salvador</strong>
+          </div>
+          <div>
+            <p class="detail-label">Envío</p>
+            <strong>A coordinar</strong>
+          </div>
+        </div>
+
+        <div class="product-detail-footer">
+          <div class="product-detail-price" id="product-price">$0.00 <span>/ 500g</span></div>
+          <div class="detail-actions">
+            <button class="btn-outline-dark" onclick="addCurrentProduct()">Agregar al carrito</button>
+            <button class="btn-primary" onclick="buyCurrentProduct()">Comprar ahora</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section related-products">
+      <div class="section-header">
+        <div class="section-eyebrow">También puede interesarte</div>
+        <h2 class="section-title">Más cacao salvadoreño</h2>
+      </div>
+      <div class="product-grid" id="related-products"></div>
+    </section>
+  </main>
+
+  <div class="cart-toast" id="cart-toast">Producto agregado al carrito</div>
+  <script src="js/producto.js"></script>
+</body>
+</html>
