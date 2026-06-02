@@ -18,17 +18,17 @@
       <li><a href="#producto">Producto</a></li>
       <li><a href="#nosotros">Nosotros</a></li>
       <li><a href="#proceso">Proceso</a></li>
-      <li><a href="#pedido">Exportación</a></li>
+      <li><a href="carrito.html">Compra</a></li>
     </ul>
-    <button class="nav-cta" onclick="scrollToPedido()">Hacer Pedido</button>
+    <button class="nav-cta" onclick="goToCart()">Carrito <span class="cart-count" id="cart-count">0</span></button>
     <button class="nav-hamburger" id="hamburger" aria-label="Menú">&#9776;</button>
   </nav>
   <div class="nav-mobile-menu" id="mobileMenu">
     <a href="#producto" onclick="closeMobile()">Producto</a>
     <a href="#nosotros" onclick="closeMobile()">Nosotros</a>
     <a href="#proceso" onclick="closeMobile()">Proceso</a>
-    <a href="#pedido" onclick="closeMobile()">Exportación</a>
-    <a href="#pedido" class="mobile-cta" onclick="closeMobile()">Hacer Pedido</a>
+    <a href="carrito.html" onclick="closeMobile()">Compra</a>
+    <a href="carrito.html" class="mobile-cta" onclick="closeMobile()">Ver carrito</a>
   </div>
 
   <!-- HERO -->
@@ -73,7 +73,7 @@
       <p class="section-sub">Cacao salvadoreño con valor agregado, listo para exportación y consumo directo.</p>
     </div>
     <div class="product-grid">
-      <div class="product-card">
+      <div class="product-card" onclick="goToProduct('nat')" role="button" tabindex="0" onkeydown="handleProductCardKey(event, 'nat')">
         <div class="product-img product-img-nat">🌿</div>
         <div class="product-body">
           <div class="product-name">Cacao Natural</div>
@@ -84,11 +84,11 @@
           </div>
           <div class="product-footer">
             <div class="product-price">$12.50 <span>/ 500g</span></div>
-            <button class="btn-cart" onclick="scrollToPedido(); window.pendingProduct='nat'">Pedir</button>
+            <button class="btn-cart" onclick="event.stopPropagation(); addToCartAndGo('nat')">Agregar</button>
           </div>
         </div>
       </div>
-      <div class="product-card product-card-featured">
+      <div class="product-card product-card-featured" onclick="goToProduct('fer')" role="button" tabindex="0" onkeydown="handleProductCardKey(event, 'fer')">
         <div class="product-img product-img-ferm">🫙</div>
         <div class="product-body">
           <span class="product-badge">Más pedido</span>
@@ -101,11 +101,11 @@
           </div>
           <div class="product-footer">
             <div class="product-price">$16.00 <span>/ 500g</span></div>
-            <button class="btn-cart" onclick="scrollToPedido(); window.pendingProduct='fer'">Pedir</button>
+            <button class="btn-cart" onclick="event.stopPropagation(); addToCartAndGo('fer')">Agregar</button>
           </div>
         </div>
       </div>
-      <div class="product-card">
+      <div class="product-card" onclick="goToProduct('tos')" role="button" tabindex="0" onkeydown="handleProductCardKey(event, 'tos')">
         <div class="product-img product-img-toast">🔥</div>
         <div class="product-body">
           <span class="product-badge product-badge-gold">Premium</span>
@@ -118,7 +118,7 @@
           </div>
           <div class="product-footer">
             <div class="product-price">$19.00 <span>/ 500g</span></div>
-            <button class="btn-cart" onclick="scrollToPedido(); window.pendingProduct='tos'">Pedir</button>
+            <button class="btn-cart" onclick="event.stopPropagation(); addToCartAndGo('tos')">Agregar</button>
           </div>
         </div>
       </div>
@@ -214,20 +214,34 @@
   </section>
 
   <!-- PEDIDO -->
-  <section class="section" id="pedido">
+  <section class="section cart-panel" id="pedido">
+    <button class="cart-close" onclick="closeCart()" aria-label="Cerrar carrito">×</button>
     <div class="section-header">
-      <div class="section-eyebrow">Haz tu pedido</div>
-      <h2 class="section-title">Formulario de Pedido</h2>
-      <p class="section-sub">Selecciona tus productos, llena tus datos y te contactamos para coordinar el envío.</p>
+      <div class="section-eyebrow">Tu carrito</div>
+      <h2 class="section-title">Carrito de compra</h2>
+      <p class="section-sub">Revisa o ajusta tus productos. Tus datos se pedirán únicamente al finalizar la compra.</p>
     </div>
     <div class="order-grid">
       <div class="order-left">
-        <div class="order-section-title">Selecciona productos</div>
-        <div class="prod-row">
+        <div class="checkout-steps">
+          <div class="checkout-step active" id="step-productos">
+            <span>1</span>
+            <p>Productos</p>
+          </div>
+          <div class="checkout-line"></div>
+          <div class="checkout-step" id="step-datos">
+            <span>2</span>
+            <p>Tus datos</p>
+          </div>
+        </div>
+
+        <div class="order-section-title">Productos en el carrito</div>
+        <p class="cart-empty" id="cart-empty">Tu carrito está vacío. Agrega productos desde el catálogo para verlos aquí.</p>
+        <div class="prod-row" data-product="nat">
           <div class="prod-row-icon prod-icon-nat">🌿</div>
           <div class="prod-row-info">
             <p class="prod-row-name">Cacao natural</p>
-            <p class="prod-row-price">$12.50 / 500g</p>
+            <p class="prod-row-price">$12.50 / 500g · Sin procesar · Alto en antioxidantes</p>
           </div>
           <div class="qty-ctrl">
             <button class="qty-btn" onclick="changeQty('nat',-1)">−</button>
@@ -235,11 +249,11 @@
             <button class="qty-btn" onclick="changeQty('nat',1)">+</button>
           </div>
         </div>
-        <div class="prod-row">
+        <div class="prod-row" data-product="fer">
           <div class="prod-row-icon prod-icon-fer">🫙</div>
           <div class="prod-row-info">
             <p class="prod-row-name">Cacao fermentado</p>
-            <p class="prod-row-price">$16.00 / 500g · <span class="tag-pill">Más pedido</span></p>
+            <p class="prod-row-price">$16.00 / 500g · Afrutado · Artesanal · <span class="tag-pill">Más pedido</span></p>
           </div>
           <div class="qty-ctrl">
             <button class="qty-btn" onclick="changeQty('fer',-1)">−</button>
@@ -247,11 +261,11 @@
             <button class="qty-btn" onclick="changeQty('fer',1)">+</button>
           </div>
         </div>
-        <div class="prod-row">
+        <div class="prod-row" data-product="tos">
           <div class="prod-row-icon prod-icon-tos">🔥</div>
           <div class="prod-row-info">
             <p class="prod-row-name">Cacao tostado</p>
-            <p class="prod-row-price">$19.00 / 500g · <span class="tag-pill">Premium</span></p>
+            <p class="prod-row-price">$19.00 / 500g · Tostado controlado · Aroma intenso · <span class="tag-pill">Premium</span></p>
           </div>
           <div class="qty-ctrl">
             <button class="qty-btn" onclick="changeQty('tos',-1)">−</button>
@@ -260,44 +274,62 @@
           </div>
         </div>
 
-        <div class="order-section-title" style="margin-top:24px">Tus datos</div>
-        <div class="form-group">
-          <label for="inp-nombre">Nombre completo</label>
-          <input type="text" id="inp-nombre" placeholder="Tu nombre completo">
-        </div>
-        <div class="form-row">
+        <div class="checkout-details" id="checkout-details">
+          <div class="order-section-title" style="margin-top:24px">Tus datos</div>
+          <p class="checkout-helper">Ya casi está listo. Déjanos un contacto para coordinar disponibilidad, pago y envío.</p>
           <div class="form-group">
-            <label for="inp-email">Correo electrónico</label>
-            <input type="email" id="inp-email" placeholder="correo@ejemplo.com">
+            <label for="inp-nombre">Nombre completo</label>
+            <input type="text" id="inp-nombre" placeholder="Tu nombre completo">
           </div>
-          <div class="form-group">
-            <label for="inp-tel">Teléfono / WhatsApp</label>
-            <input type="tel" id="inp-tel" placeholder="+503 0000-0000">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="inp-email">Correo electrónico</label>
+              <input type="email" id="inp-email" placeholder="correo@ejemplo.com">
+            </div>
+            <div class="form-group">
+              <label for="inp-tel">Teléfono / WhatsApp</label>
+              <input type="tel" id="inp-tel" placeholder="+503 0000-0000">
+            </div>
           </div>
-        </div>
-        <div class="form-row">
           <div class="form-group">
             <label for="inp-pais">País</label>
             <input type="text" id="inp-pais" placeholder="El Salvador…">
           </div>
           <div class="form-group">
-            <label for="inp-tipo">Tipo de pedido</label>
-            <select id="inp-tipo">
-              <option value="">Seleccionar…</option>
-              <option value="personal">Personal / consumo</option>
-              <option value="mayoreo">Mayoreo local</option>
-              <option value="exportacion">Exportación</option>
-            </select>
+            <label for="inp-notas">Notas adicionales</label>
+            <textarea id="inp-notas" placeholder="Presentación especial, fecha de entrega, etc." rows="3"></textarea>
           </div>
-        </div>
-        <div class="form-group">
-          <label for="inp-notas">Notas adicionales</label>
-          <textarea id="inp-notas" placeholder="Presentación especial, fecha de entrega, etc." rows="3"></textarea>
         </div>
       </div>
 
       <div class="order-summary">
-        <div class="order-section-title">Resumen del pedido</div>
+        <div class="order-section-title">Resumen del carrito</div>
+        <div class="summary-purchase">
+          <p class="summary-purchase-title">Tipo de compra</p>
+          <div class="purchase-options">
+            <label class="purchase-option active" onclick="setOrderType('personal')">
+              <input type="radio" name="tipoPedido" value="personal" checked onchange="setOrderType('personal')">
+              <span>
+                <strong>Consumo</strong>
+                <small>Personal o familiar.</small>
+              </span>
+            </label>
+            <label class="purchase-option featured" onclick="setOrderType('mayoreo')">
+              <input type="radio" name="tipoPedido" value="mayoreo" onchange="setOrderType('mayoreo')">
+              <span>
+                <strong>Mayoreo</strong>
+                <small>Tiendas, cafeterías o reventa.</small>
+              </span>
+            </label>
+            <label class="purchase-option" onclick="setOrderType('exportacion')">
+              <input type="radio" name="tipoPedido" value="exportacion" onchange="setOrderType('exportacion')">
+              <span>
+                <strong>Exportación</strong>
+                <small>Coordinación internacional.</small>
+              </span>
+            </label>
+          </div>
+        </div>
         <div id="resumen-items">
           <p class="resumen-empty">Agrega productos para ver el resumen</p>
         </div>
@@ -310,13 +342,17 @@
             <span class="total-label">Envío</span>
             <span class="total-val" id="envio">A coordinar</span>
           </div>
+          <div class="total-row">
+            <span class="total-label">Modalidad</span>
+            <span class="total-val" id="tipo-seleccionado">Consumo</span>
+          </div>
           <div class="total-row total-final-row">
             <span class="total-label-final">Total estimado</span>
             <span class="total-final" id="total">$0.00</span>
           </div>
         </div>
-        <button class="confirm-btn" id="btn-confirmar" onclick="confirmarPedido()">
-          Confirmar pedido →
+        <button class="confirm-btn" id="btn-confirmar" onclick="handleCheckoutAction()">
+          Agrega productos para continuar
         </button>
         <p class="order-note">Al confirmar recibirás respuesta por WhatsApp o correo. Tierra Dorada verificará disponibilidad y coordinará el envío.</p>
 
@@ -338,8 +374,8 @@
       <p>Pedidos mayoristas, exportación y alianzas comerciales en Centroamérica y el mundo.</p>
     </div>
     <div class="cta-actions">
-      <button class="btn-outline" onclick="document.getElementById('pedido').scrollIntoView({behavior:'smooth'})">Ver pedidos</button>
-      <button class="btn-primary" onclick="document.getElementById('inp-nombre').focus(); document.getElementById('pedido').scrollIntoView({behavior:'smooth'})">Contactar ahora</button>
+      <button class="btn-outline" onclick="goToCart()">Ver carrito</button>
+      <button class="btn-primary" onclick="goToCart()">Contactar ahora</button>
     </div>
   </div>
 
@@ -355,7 +391,7 @@
         <li><a href="#producto">Cacao Natural</a></li>
         <li><a href="#producto">Cacao Fermentado</a></li>
         <li><a href="#producto">Cacao Tostado</a></li>
-        <li><a href="#pedido">Pedidos Mayoristas</a></li>
+        <li><a href="carrito.html">Pedidos Mayoristas</a></li>
       </ul>
     </div>
     <div class="footer-col">
@@ -363,8 +399,8 @@
       <ul>
         <li><a href="#nosotros">Nosotros</a></li>
         <li><a href="#nosotros">Misión & Visión</a></li>
-        <li><a href="#pedido">Exportación</a></li>
-        <li><a href="#pedido">Contacto</a></li>
+        <li><a href="carrito.html">Exportación</a></li>
+        <li><a href="carrito.html">Contacto</a></li>
       </ul>
     </div>
   </footer>
@@ -372,6 +408,8 @@
     <p>© 2025 Tierra Dorada Exportaciones S.A. de C.V. — El Salvador</p>
     <p>Calidad · Transparencia · Sostenibilidad</p>
   </div>
+
+  <div class="cart-toast" id="cart-toast">Producto agregado al carrito</div>
 
   <script src="js/main.js"></script>
 </body>
