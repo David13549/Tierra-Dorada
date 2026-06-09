@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
   <nav id="navbar">
@@ -19,7 +19,7 @@
       <li><a href="#producto">Producto</a></li>
       <li><a href="#exportacion">Exportacion</a></li>
       <li><a href="#nosotros">Nosotros</a></li>
-      <li><a href="carrito.html">Compra</a></li>
+      <li><a href="#proceso">Proceso</a></li>
     </ul>
     <button class="nav-cta" onclick="goToCart()">Carrito <span class="cart-count" id="cart-count">0</span></button>
     <button class="nav-hamburger" id="hamburger" aria-label="Menu">&#9776;</button>
@@ -29,6 +29,7 @@
     <a href="#producto" onclick="closeMobile()">Producto</a>
     <a href="#exportacion" onclick="closeMobile()">Exportacion</a>
     <a href="#nosotros" onclick="closeMobile()">Nosotros</a>
+    <a href="#proceso" onclick="closeMobile()">Proceso</a>
     <a href="carrito.html" class="mobile-cta" onclick="closeMobile()">Ver carrito</a>
   </div>
 
@@ -36,11 +37,10 @@
     <div class="hero-text">
       <div class="pill-origin">El Salvador · Theobroma cacao</div>
       <div class="hero-badge">De El Salvador Para El Mundo</div>
-      <h1 class="hero-title">Cacao tostado<br>salvadoreno<br><em>para exportacion.</em></h1>
-      <p class="hero-sub">Un solo producto: cacao tostado en sacos de 50 kg, listo para compradores internacionales. Cada contenedor acepta hasta 400 sacos.</p>
+      <h1 class="hero-title">Cacao tostado<br>salvadoreño<br><em>para exportacion.</em></h1>
+      <p class="hero-sub">Un solo producto: cacao tostado en sacos de 50 kg, listo para compradores internacionales.</p>
       <div class="hero-btns">
         <button class="btn-primary" onclick="document.getElementById('producto').scrollIntoView({behavior:'smooth'})">Ver producto</button>
-        <button class="btn-secondary" onclick="goToCart()">Cotizar exportacion -></button>
       </div>
     </div>
     <div class="hero-visual">
@@ -49,17 +49,17 @@
           <div class="hero-icon">TD</div>
           <div class="hero-card-label">Producto unico</div>
         </div>
-        <div class="hero-card-val">Cacao Tostado</div>
-        <div class="hero-card-desc">Saco 50 kg · Etiquetas Premium Export</div>
+        <div class="hero-card-val">Cacao Tostado Premium</div>
+        <div class="hero-card-desc"></div>
       </div>
       <div class="hero-cards-row">
         <div class="hero-mini">
-          <div class="hero-mini-num">400</div>
-          <div class="hero-mini-label">Sacos maximo por contenedor</div>
+          <div class="hero-mini-num">Aroma</div>
+          <div class="hero-mini-label">Tostado intenso y textura crujiente</div>
         </div>
         <div class="hero-mini">
-          <div class="hero-mini-num">Suecia</div>
-          <div class="hero-mini-label">Destino de mayor exportacion</div>
+          <div class="hero-mini-num">Origen</div>
+          <div class="hero-mini-label">Cacao salvadoreño seleccionado</div>
         </div>
       </div>
     </div>
@@ -68,25 +68,17 @@
   <section class="section section-alt" id="producto">
     <div class="section-header">
       <div class="section-eyebrow">Catalogo exportador</div>
-      <h2 class="section-title">Cacao Tostado</h2>
+      <h2 class="section-title">Cacao Tostado Premium</h2>
       <p class="section-sub">Producto unico de Tierra Dorada. Precio base en dolares y conversion a moneda local del pais comprador.</p>
     </div>
     <div class="product-grid product-grid-single">
       <div class="product-card product-card-featured" onclick="goToProduct('tos')" role="button" tabindex="0" onkeydown="handleProductCardKey(event, 'tos')">
         <div class="product-img product-img-toast"></div>
         <div class="product-body">
-          <span class="product-badge product-badge-gold">Etiqueta: Premium Export</span>
-          <div class="product-name">Cacao Tostado</div>
+          <div class="product-name">Cacao Tostado Premium</div>
           <p class="product-desc">Tostado controlado para maximo aroma, textura crujiente y sabor intenso. Presentacion exportable en saco de 50 kg.</p>
-          <div class="product-tags">
-            <span class="tag">Etiqueta: Premium</span>
-            <span class="tag">Etiqueta: Export</span>
-            <span class="tag">Saco 50 kg</span>
-            <span class="tag">Max. 400 sacos</span>
-          </div>
           <div class="product-footer">
-            <div class="product-price">$190.00 <span>/ saco 50 kg</span></div>
-            <button class="btn-cart" onclick="event.stopPropagation(); addToCartAndGo('tos')">Cotizar</button>
+            <div class="product-price">$190.00</div>
           </div>
         </div>
       </div>
@@ -108,9 +100,9 @@
         <strong>20,000 kg</strong>
         <span>Capacidad maxima por contenedor</span>
       </div>
-      <div class="export-card featured-export">
-        <strong>Suecia</strong>
-        <span>Pais destacado por mayor exportacion</span>
+      <div class="export-card">
+        <strong>Moneda local</strong>
+        <span>Conversion automatica por pais destino</span>
       </div>
     </div>
   </section>
@@ -124,14 +116,12 @@
         <p class="nosotros-p">Hoy enfocamos nuestra oferta en cacao tostado de calidad para compradores internacionales, con empaques y calculos pensados para exportacion.</p>
         <div class="mision-vision">
           <div class="mv-card">
-            <div class="mv-icon">TD</div>
             <div>
               <div class="mv-title">Mision</div>
               <p class="mv-text">Brindar cacao tostado de alta calidad con procesos responsables, inocuos y transparentes.</p>
             </div>
           </div>
           <div class="mv-card">
-            <div class="mv-icon">EX</div>
             <div>
               <div class="mv-title">Vision</div>
               <p class="mv-text">Ser una empresa exportadora lider en Centroamerica por calidad, confiabilidad y sostenibilidad.</p>
@@ -155,24 +145,23 @@
       <p class="section-sub">Cada lote pasa por cuatro etapas controladas antes de empacarse para exportacion.</p>
     </div>
     <div class="process-row">
-      <div class="process-step"><div class="step-circle">01</div><div class="step-num">01</div><div class="step-name">Seleccion</div><p class="step-desc">Semillas escogidas en fincas de confianza.</p></div>
+      <div class="process-step"><div class="step-circle"><img src="img/proceso-seleccion.png" alt="Seleccion de semillas de cacao"></div><div class="step-num">01</div><div class="step-name">Seleccion</div><p class="step-desc">Semillas escogidas en fincas de confianza.</p></div>
       <div class="process-arrow">-></div>
-      <div class="process-step"><div class="step-circle">02</div><div class="step-num">02</div><div class="step-name">Fermentacion</div><p class="step-desc">Desarrollo de sabor y aroma profundo.</p></div>
+      <div class="process-step"><div class="step-circle"><img src="img/proceso-fermentacion.png" alt="Fermentacion de cacao en cajas de madera"></div><div class="step-num">02</div><div class="step-name">Fermentacion</div><p class="step-desc">Desarrollo de sabor y aroma profundo.</p></div>
       <div class="process-arrow">-></div>
-      <div class="process-step"><div class="step-circle">03</div><div class="step-num">03</div><div class="step-name">Secado</div><p class="step-desc">Secado natural y control de calidad.</p></div>
+      <div class="process-step"><div class="step-circle"><img src="img/proceso-secado.png" alt="Secado natural de granos de cacao"></div><div class="step-num">03</div><div class="step-name">Secado</div><p class="step-desc">Secado natural y control de calidad.</p></div>
       <div class="process-arrow">-></div>
-      <div class="process-step"><div class="step-circle">04</div><div class="step-num">04</div><div class="step-name">Tostado</div><p class="step-desc">Temperatura precisa para textura crujiente.</p></div>
+      <div class="process-step"><div class="step-circle"><img src="img/proceso-tostado.png" alt="Tostado de granos de cacao"></div><div class="step-num">04</div><div class="step-name">Tostado</div><p class="step-desc">Temperatura precisa para textura crujiente.</p></div>
     </div>
   </section>
 
   <div class="cta-band">
     <div class="cta-text">
-      <h2>Listo para exportar cacao salvadoreno?</h2>
+      <h2>Listo para exportar cacao salvadoreño?</h2>
       <p>Cotiza por saco, contenedor, pais destino y moneda local.</p>
     </div>
     <div class="cta-actions">
       <button class="btn-outline" onclick="goToCart()">Ver carrito</button>
-      <button class="btn-primary" onclick="goToCart()">Cotizar ahora</button>
     </div>
   </div>
 
@@ -189,14 +178,15 @@
       <ul>
         <li><a href="#producto">Cacao Tostado</a></li>
         <li><a href="carrito.html">Cotizacion exportadora</a></li>
+        <li><a href="#proceso">Proceso</a></li>
       </ul>
     </div>
     <div class="footer-col">
       <h4>Empresa</h4>
       <ul>
-        <li><a href="#nosotros">Nosotros</a></li>
-        <li><a href="#exportacion">Exportacion</a></li>
-        <li><a href="carrito.html">Contacto</a></li>
+        <li><a href="acerca.html" target="_blank" rel="noopener">Acerca de</a></li>
+        <li><a href="politicas.html" target="_blank" rel="noopener">Politicas y privacidad</a></li>
+        <li><a href="contactenos.html" target="_blank" rel="noopener">Contactenos</a></li>
       </ul>
     </div>
   </footer>
