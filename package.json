@@ -1,0 +1,15 @@
+{
+  "name": "tierra-dorada",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tierra Dorada Exportaciones checkout",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "start:3001": "set PORT=3001&& node server.js"
+  },
+  "dependencies": {
+    "nodemailer": "^8.0.10",
+    "qrcode": "^1.5.4"
+  }
+}
