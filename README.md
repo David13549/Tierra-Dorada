@@ -62,5 +62,40 @@ fetch('/api/pedidos', {
 
 Solo abre `index.html` en tu navegador. No requiere servidor para la versión básica.
 
+## Backend y Supabase
+
+Para el checkout con factura, correo y Supabase, usa el servidor:
+
+```bash
+npm install
+npm start
+```
+
+Luego abre `http://localhost:3000`.
+
+La base de datos esta definida en:
+
+```text
+supabase/migrations/202606090001_tierra_dorada_core.sql
+```
+
+Tablas incluidas:
+
+- `products`: catalogo de productos.
+- `customers`: compradores/contactos del checkout.
+- `orders`: pedidos exportadores y factura asociada.
+- `order_items`: detalle de productos por pedido.
+- `payments`: metodo y estado del pago simulado.
+- `contact_messages`: solicitudes enviadas desde `contactenos.html`.
+
+Variables necesarias en `.env` local y en los secretos del hosting/GitHub:
+
+```env
+SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key
+```
+
+La `service_role_key` debe usarse solo en `server.js`, nunca en archivos del navegador. Ejecuta la migracion SQL desde Supabase SQL Editor o con Supabase CLI.
+
 ---
 **Tierra Dorada Exportaciones S.A. de C.V. · La Unión, El Salvador · 2025**

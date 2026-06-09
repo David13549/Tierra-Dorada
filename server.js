@@ -83,8 +83,163 @@ function buildInvoiceNumber() {
   return `TD-${stamp}-${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
+function buildOrderNumber() {
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  return `TD-${stamp}-${Math.floor(10000 + Math.random() * 90000)}`;
+}
+
 function getPublicBaseUrl(requestBaseUrl) {
   return (process.env.PUBLIC_BASE_URL || requestBaseUrl || `http://localhost:${PORT}`).replace(/\/$/, '');
+}
+
+function supabaseConfig() {
+  const url = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return { url, serviceKey, enabled: Boolean(url && serviceKey) };
+}
+
+function supabaseRequest(method, endpoint, payload, options = {}) {
+  const config = supabaseConfig();
+  if (!config.enabled) {
+    return Promise.reject(new Error('Supabase no configurado. Define SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY.'));
+  }
+
+  const url = new URL(`${config.url}/rest/v1/${endpoint}`);
+  if (options.onConflict) url.searchParams.set('on_conflict', options.onConflict);
+  const body = payload === undefined ? null : JSON.stringify(payload);
+
+  return new Promise((resolve, reject) => {
+    const req = https.request(url, {
+      method,
+      headers: {
+        apikey: config.serviceKey,
+        Authorization: `Bearer ${config.serviceKey}`,
+        'Content-Type': 'application/json',
+        Prefer: options.prefer || 'return=representation',
+        ...(body ? { 'Content-Length': Buffer.byteLength(body) } : {})
+      }
+    }, response => {
+      let responseBody = '';
+      response.on('data', chunk => { responseBody += chunk; });
+      response.on('end', () => {
+        let data = null;
+        try {
+          data = responseBody ? JSON.parse(responseBody) : null;
+        } catch {
+          data = responseBody;
+        }
+
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          const message = Array.isArray(data) ? JSON.stringify(data) : (data?.message || data?.hint || responseBody || 'Error de Supabase');
+          reject(new Error(message));
+          return;
+        }
+
+        resolve(data);
+      });
+    });
+
+    req.setTimeout(10000, () => {
+      req.destroy(new Error('Tiempo agotado conectando con Supabase'));
+    });
+    req.on('error', reject);
+    if (body) req.write(body);
+    req.end();
+  });
+}
+
+async function getProductBySlug(slug) {
+  const encodedSlug = encodeURIComponent(slug);
+  const products = await supabaseRequest('GET', `products?slug=eq.${encodedSlug}&select=id,slug,name,price_usd,sack_kg,max_sacks&limit=1`);
+  return Array.isArray(products) ? products[0] : null;
+}
+
+async function saveOrderToSupabase(order, invoice, requestBaseUrl) {
+  const customerRows = await supabaseRequest('POST', 'customers', [{
+    full_name: order.customer.name,
+    email: order.customer.email,
+    phone: order.customer.phone || null,
+    country: order.destination.country,
+    notes: order.customer.notes || null
+  }], { onConflict: 'email', prefer: 'resolution=merge-duplicates,return=representation' });
+  const customer = customerRows[0];
+
+  const invoiceUrl = `${getPublicBaseUrl(requestBaseUrl)}/factura/${encodeURIComponent(invoice.number)}`;
+  const orderRows = await supabaseRequest('POST', 'orders', [{
+    order_number: buildOrderNumber(),
+    customer_id: customer.id,
+    status: 'confirmed',
+    destination_country: order.destination.country,
+    currency: order.destination.currency,
+    exchange_rate: Number(order.destination.exchangeRate || 1),
+    subtotal_usd: Number(order.totals.subtotalUsd || 0),
+    total_local: Number(order.totals.totalLocal || 0),
+    total_sacks: Number(order.totals.sacks || 0),
+    total_weight_kg: Number(order.totals.weightKg || 0),
+    payment_method: order.payment.method,
+    invoice_number: invoice.number,
+    invoice_url: invoiceUrl
+  }]);
+  const savedOrder = orderRows[0];
+
+  const productCache = {};
+  const itemRows = [];
+  for (const item of order.items || []) {
+    if (!productCache[item.id]) {
+      productCache[item.id] = await getProductBySlug(item.id).catch(() => null);
+    }
+    const product = productCache[item.id];
+    itemRows.push({
+      order_id: savedOrder.id,
+      product_id: product?.id || null,
+      product_slug: item.id,
+      product_name: item.name,
+      quantity: Number(item.quantity || 0),
+      unit_price_usd: Number(item.unitPrice || 0),
+      total_usd: Number(item.total || 0),
+      weight_kg: Number(item.weightKg || 0)
+    });
+  }
+
+  if (itemRows.length) {
+    await supabaseRequest('POST', 'order_items', itemRows);
+  }
+
+  await supabaseRequest('POST', 'payments', [{
+    order_id: savedOrder.id,
+    provider: order.payment.method,
+    status: 'simulated',
+    amount_usd: Number(order.totals.subtotalUsd || 0),
+    metadata: { invoice_number: invoice.number }
+  }]);
+
+  const invoicePath = path.join(ROOT, 'invoices', `${invoice.number}.html`);
+  if (fs.existsSync(invoicePath)) {
+    try {
+      await supabaseRequest('POST', 'invoices', [{
+        invoice_number: invoice.number,
+        order_id: savedOrder.id,
+        customer_email: order.customer.email,
+        html_content: fs.readFileSync(invoicePath, 'utf8'),
+        invoice_url: `${getPublicBaseUrl(requestBaseUrl)}/factura/${encodeURIComponent(invoice.number)}`
+      }]);
+    } catch { /* no bloquear el flujo si falla el guardado */ }
+  }
+
+  return savedOrder;
+}
+
+async function saveContactToSupabase(contact) {
+  const rows = await supabaseRequest('POST', 'contact_messages', [{
+    full_name: String(contact.name || '').trim(),
+    company: String(contact.company || '').trim() || null,
+    email: String(contact.email || '').trim(),
+    country: String(contact.country || '').trim() || null,
+    volume: String(contact.volume || '').trim() || null,
+    topic: String(contact.topic || '').trim() || null,
+    message: String(contact.message || '').trim()
+  }]);
+  return rows[0];
 }
 
 function ensureInvoicesDir() {
@@ -98,19 +253,30 @@ function saveInvoiceHtml(invoiceNumber, html) {
   fs.writeFileSync(path.join(invoicesDir, `${invoiceNumber}.html`), html, 'utf8');
 }
 
-function serveInvoice(req, res) {
+async function serveInvoice(req, res) {
   const cleanUrl = decodeURIComponent(req.url.split('?')[0]);
   const invoiceNumber = path.basename(cleanUrl.replace('/factura/', ''));
   const invoicePath = path.join(ROOT, 'invoices', `${invoiceNumber}.html`);
 
-  if (!invoiceNumber || !fs.existsSync(invoicePath)) {
-    res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end('<h1>Factura no encontrada</h1><p>Verifica el codigo QR o el numero de factura.</p>');
+  if (invoiceNumber && fs.existsSync(invoicePath)) {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(fs.readFileSync(invoicePath, 'utf8'));
     return;
   }
 
-  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-  res.end(fs.readFileSync(invoicePath, 'utf8'));
+  if (invoiceNumber) {
+    try {
+      const rows = await supabaseRequest('GET', `invoices?invoice_number=eq.${encodeURIComponent(invoiceNumber)}&select=html_content&limit=1`);
+      if (Array.isArray(rows) && rows[0]?.html_content) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(rows[0].html_content);
+        return;
+      }
+    } catch { /* caer al 404 si Supabase no responde */ }
+  }
+
+  res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+  res.end('<h1>Factura no encontrada</h1><p>Verifica el codigo QR o el numero de factura.</p>');
 }
 
 function getTransporter() {
@@ -239,7 +405,7 @@ function buildInvoiceHtml(invoice, order, qrCid, logoCid) {
   </html>`;
 }
 
-async function sendInvoiceEmail(order, requestBaseUrl) {
+async function prepareInvoice(order, requestBaseUrl) {
   if (!order.customer?.email) {
     throw new Error('El correo del cliente es obligatorio para enviar la factura.');
   }
@@ -262,6 +428,10 @@ async function sendInvoiceEmail(order, requestBaseUrl) {
   const publicHtml = buildInvoiceHtml(invoice, order, qrDataUrl, logoDataUrl);
   saveInvoiceHtml(invoice.number, publicHtml);
 
+  return { invoice, html, qrBase64, qrCid, logoCid, logoPath };
+}
+
+async function dispatchInvoiceEmail(order, invoice, html, qrBase64, qrCid, logoCid, logoPath) {
   const fromEmail = process.env.INVOICE_FROM_EMAIL || process.env.SMTP_USER;
   const fromName = process.env.INVOICE_FROM_NAME || 'Tierra Dorada Exportaciones';
   const transporter = getTransporter();
@@ -289,8 +459,6 @@ async function sendInvoiceEmail(order, requestBaseUrl) {
       }
     ]
   });
-
-  return invoice;
 }
 
 function sendJson(res, status, payload) {
@@ -374,8 +542,49 @@ const server = http.createServer(async (req, res) => {
       const order = await readJsonBody(req);
       const protocol = req.headers['x-forwarded-proto'] || 'http';
       const requestBaseUrl = `${protocol}://${req.headers.host}`;
-      const invoice = await sendInvoiceEmail(order, requestBaseUrl);
-      sendJson(res, 200, { ok: true, invoice });
+
+      // 1. Genera numero, QR y HTML de factura — siempre
+      const prepared = await prepareInvoice(order, requestBaseUrl);
+      const { invoice } = prepared;
+
+      // 2. Guarda en Supabase — independiente del email
+      let savedOrder = null;
+      let databaseWarning = null;
+      try {
+        savedOrder = await saveOrderToSupabase(order, invoice, requestBaseUrl);
+      } catch (databaseError) {
+        databaseWarning = databaseError.message;
+      }
+
+      // 3. Envia email — si falla el pedido ya esta guardado
+      let emailWarning = null;
+      try {
+        await dispatchInvoiceEmail(order, invoice, prepared.html, prepared.qrBase64, prepared.qrCid, prepared.logoCid, prepared.logoPath);
+      } catch (emailError) {
+        emailWarning = emailError.message;
+      }
+
+      sendJson(res, 200, { ok: true, invoice, order: savedOrder, databaseWarning, emailWarning });
+    } catch (error) {
+      sendJson(res, 500, { ok: false, error: error.message });
+    }
+    return;
+  }
+
+  if (req.url.startsWith('/api/contact')) {
+    if (req.method !== 'POST') {
+      sendJson(res, 405, { ok: false, error: 'Metodo no permitido' });
+      return;
+    }
+
+    try {
+      const contact = await readJsonBody(req);
+      if (!String(contact.name || '').trim() || !String(contact.email || '').trim() || !String(contact.message || '').trim()) {
+        sendJson(res, 400, { ok: false, error: 'Nombre, correo y mensaje son obligatorios.' });
+        return;
+      }
+      const savedContact = await saveContactToSupabase(contact);
+      sendJson(res, 200, { ok: true, contact: savedContact });
     } catch (error) {
       sendJson(res, 500, { ok: false, error: error.message });
     }
@@ -383,7 +592,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.url.startsWith('/factura/')) {
-    serveInvoice(req, res);
+    await serveInvoice(req, res);
     return;
   }
 
