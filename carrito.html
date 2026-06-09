@@ -36,47 +36,47 @@
 
     <section class="section cart-page">
       <div class="section-header">
-        <div class="section-eyebrow">Cotizacion exportadora</div>
         <h1 class="section-title">Carrito de compra</h1>
-        <p class="section-sub">Compra cacao tostado en sacos de 50 kg. El limite por contenedor es de 400 sacos.</p>
       </div>
 
       <div class="order-grid">
         <div class="order-left">
           <div class="checkout-steps">
-            <div class="checkout-step active" id="step-productos"><span>1</span><p>Productos</p></div>
+            <button class="checkout-step active" id="step-productos" type="button" onclick="goToCheckoutStep(1)"><span>1</span><p>Productos</p></button>
             <div class="checkout-line"></div>
-            <div class="checkout-step" id="step-datos"><span>2</span><p>Tus datos</p></div>
+            <button class="checkout-step" id="step-datos" type="button" onclick="goToCheckoutStep(2)"><span>2</span><p>Tus datos</p></button>
             <div class="checkout-line"></div>
-            <div class="checkout-step" id="step-pago"><span>3</span><p>Pago</p></div>
+            <button class="checkout-step" id="step-pago" type="button" onclick="goToCheckoutStep(3)"><span>3</span><p>Pago</p></button>
           </div>
 
-          <div class="order-section-title">Producto en el carrito</div>
-          <div id="cart-items"></div>
+          <div class="checkout-panel" id="checkout-products-panel">
+            <div class="order-section-title">Producto en el carrito</div>
+            <div id="cart-items"></div>
 
-          <div class="export-tools">
-            <div class="order-section-title">Pais, moneda y conversion</div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="country-select">Pais destino</label>
-                <select id="country-select" onchange="setDestinationFromSelect()"></select>
+            <div class="export-tools">
+              <div class="order-section-title">Pais, moneda y conversion</div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="country-select">Pais destino</label>
+                  <select id="country-select" onchange="setDestinationFromSelect()"></select>
+                </div>
+                <div class="form-group">
+                  <label for="currency-select">Moneda</label>
+                  <select id="currency-select" onchange="setCurrencyFromSelect()"></select>
+                </div>
               </div>
-              <div class="form-group">
-                <label for="currency-select">Moneda</label>
-                <select id="currency-select" onchange="setCurrencyFromSelect()"></select>
+              <div class="converter-card">
+                <div>
+                  <span>Precio en USD</span>
+                  <strong id="converter-usd">$0.00</strong>
+                </div>
+                <div>
+                  <span>Precio moneda local</span>
+                  <strong id="converter-local">0.00</strong>
+                </div>
               </div>
+              <p class="rate-note" id="rate-note">Cargando tasa de cambio...</p>
             </div>
-            <div class="converter-card">
-              <div>
-                <span>Precio en USD</span>
-                <strong id="converter-usd">$0.00</strong>
-              </div>
-              <div>
-                <span>Precio moneda local</span>
-                <strong id="converter-local">0.00</strong>
-              </div>
-            </div>
-            <p class="rate-note" id="rate-note">Cargando tasa de cambio...</p>
           </div>
 
           <div class="checkout-details" id="checkout-details">
@@ -108,35 +108,30 @@
 
           <div class="checkout-details payment-details" id="payment-details">
             <div class="order-section-title" style="margin-top:24px">Forma de pago</div>
-            <p class="checkout-helper">Elige como deseas pagar. Tarjeta trabaja con metodos de prueba y PayPal Sandbox para una compra irreal.</p>
+            <p class="checkout-helper">Selecciona como deseas pagar. Este checkout usa aprobaciones de prueba, sin cobros reales.</p>
             <div class="payment-options">
               <label class="payment-option active" onclick="setPaymentMethod('tarjeta')">
                 <input type="radio" name="formaPago" value="tarjeta" checked>
+                <img src="img/payments-visa.svg" alt="Tarjeta" class="payment-option-img">
                 <span><strong>Tarjeta</strong><small>Debito o credito.</small></span>
+              </label>
+              <label class="payment-option" onclick="setPaymentMethod('paypal')">
+                <input type="radio" name="formaPago" value="paypal">
+                <img src="img/payments-paypal.svg" alt="PayPal" class="payment-option-img">
+                <span><strong>PayPal</strong><small>Aprobacion digital de prueba.</small></span>
               </label>
               <label class="payment-option" onclick="setPaymentMethod('efectivo')">
                 <input type="radio" name="formaPago" value="efectivo">
+                <img src="img/payments-cash.svg" alt="Efectivo" class="payment-option-img">
                 <span><strong>Efectivo</strong><small>Pago al coordinar.</small></span>
               </label>
             </div>
             <div class="card-payment-fields" id="card-payment-fields">
-              <div class="card-methods">
-                <label class="card-method active" onclick="setCardProcessor('visa')">
-                  <input type="radio" name="tipoTarjeta" value="visa" checked>
-                  <img src=\"https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg\" alt=\"Visa\" class=\"card-brand-img\">
-                </label>
-                <label class="card-method" onclick="setCardProcessor('mastercard')">
-                  <input type="radio" name="tipoTarjeta" value="mastercard">
-                  <img src=\"https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg\" alt=\"Mastercard\" class=\"card-brand-img\">
-                </label>
-                <label class="card-method" onclick="setCardProcessor('amex')">
-                  <input type="radio" name="tipoTarjeta" value="amex">
-                  <img src=\"https://upload.wikimedia.org/wikipedia/commons/3/30/American_Express_logo.svg\" alt=\"Amex\" class=\"card-brand-img\">
-                </label>
-                <label class="card-method paypal-method" onclick="setCardProcessor('paypal_sandbox')">
-                  <input type="radio" name="tipoTarjeta" value="paypal_sandbox">
-                  <img src=\"https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg\" alt=\"PayPal\" class=\"card-brand-img\">
-                </label>
+              <div class="accepted-payments" id="accepted-card-logos">
+                <span>Aceptamos</span>
+                <img src="img/payments-visa.svg" alt="Visa">
+                <img src="img/payments-mastercard.svg" alt="Mastercard">
+                <img src="img/payments-amex.svg" alt="American Express">
               </div>
 
               <div id="direct-card-fields">
@@ -149,12 +144,15 @@
               </div>
 
               <div class="paypal-sandbox-sim" id="paypal-sandbox-sim">
-                <div>
-                  <img src=\"https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg\" alt=\"PayPal\" class=\"card-brand-img\">
-                  <p>Simula una aprobacion de pago sin cobrar dinero real.</p>
+                <div class="sandbox-copy">
+                  <img src="img/payments-paypal.svg" alt="PayPal" class="sandbox-logo">
+                  <div>
+                    <strong>Confirmacion con PayPal</strong>
+                    <p>Se generara una aprobacion de prueba para validar el flujo de compra.</p>
+                  </div>
                 </div>
-                <button type="button" class="paypal-sandbox-btn" onclick="simulatePayPalPayment()">Pagar con PayPal Sandbox</button>
-                <span id="paypal-sandbox-status">Pendiente de aprobacion</span>
+                <button type="button" class="paypal-sandbox-btn" onclick="simulatePayPalPayment()">Confirmar con PayPal</button>
+                <span id="paypal-sandbox-status" class="sandbox-status pending">Pendiente de aprobacion</span>
               </div>
             </div>
           </div>
@@ -165,13 +163,9 @@
           <div class="summary-purchase">
             <p class="summary-purchase-title">Tipo de compra</p>
             <div class="purchase-options">
-              <label class="purchase-option" onclick="setOrderType('mayoreo')">
-                <input type="radio" name="tipoPedido" value="mayoreo">
-                <span><strong>Mayoreo</strong><small>Tiendas, cafeterias o reventa.</small></span>
-              </label>
-              <label class="purchase-option active featured" onclick="setOrderType('exportacion')">
+              <label class="purchase-option active" onclick="setOrderType('exportacion')">
                 <input type="radio" name="tipoPedido" value="exportacion" checked>
-                <span><strong>Exportacion</strong><small>Compra internacional.</small></span>
+                <span><strong>Exportacion</strong><small>Compra internacional de cacao tostado premium.</small></span>
               </label>
             </div>
           </div>

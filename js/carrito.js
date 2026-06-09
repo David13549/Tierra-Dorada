@@ -1,4 +1,4 @@
-const MAX_SACKS = 400;
+ï»¿const MAX_SACKS = 400;
 const SACK_KG = 50;
 const FALLBACK_RATES = {
   USD: 1, SEK: 10.55, THB: 36.72, EUR: 0.92, GBP: 0.78, CAD: 1.37, MXN: 18.15,
@@ -11,7 +11,7 @@ const products = {
     name: "Cacao tostado",
     price: 190.00,
     image: "img/cacao-tostado.png",
-    specs: "Saco 50 kg · Etiquetas Premium Export · Listo para exportacion"
+    description: "Granos de cacao seleccionados y tostados, con aroma intenso y textura crujiente. Presentacion lista para exportacion en sacos de 50 kg."
   }
 };
 
@@ -24,14 +24,21 @@ const countries = [
   ["Corea del Sur", "KRW"], ["India", "INR"], ["Australia", "AUD"]
 ];
 
-const orderTypeLabels = { mayoreo: "Mayoreo", exportacion: "Exportacion" };
-const paymentMethodLabels = { tarjeta: "Tarjeta (PayPal)", efectivo: "Efectivo" };
+const orderTypeLabels = { exportacion: "Exportacion" };
+const paymentMethodLabels = { tarjeta: "Tarjeta", paypal: "PayPal", efectivo: "Efectivo" };
+const cardProcessorLabels = {
+  visa: "Tarjeta",
+  mastercard: "Tarjeta",
+  amex: "Tarjeta",
+  paypal_sandbox: "PayPal"
+};
 
 let checkoutStep = 1;
 let exchangeRates = { ...FALLBACK_RATES };
 let currentCountry = "Suecia";
 let currentCurrency = "SEK";
 let rateSource = "respaldo local";
+let paypalSandboxApproved = false;
 const hamburger = document.getElementById("hamburger");
 const mobileMenu = document.getElementById("mobileMenu");
 
@@ -49,6 +56,14 @@ function formatUsd(value) {
 
 function formatCurrency(value, currency) {
   return new Intl.NumberFormat("es-SV", { style: "currency", currency }).format(value);
+}
+
+function apiUrl(path) {
+  const devOnlyPorts = ["5173", "5500", "5501", "8080"];
+  const isFile = window.location.protocol === "file:";
+  const isDevStaticServer = ["localhost", "127.0.0.1"].includes(window.location.hostname) && devOnlyPorts.includes(window.location.port);
+  const base = isFile || isDevStaticServer ? "http://localhost:3000" : "";
+  return `${base}${path}`;
 }
 
 function getCart() {
@@ -88,6 +103,19 @@ function changeQty(product, delta) {
   renderCart();
 }
 
+function setQty(product, value) {
+  const cart = getCart();
+  const numericValue = Number.parseInt(value, 10);
+  const nextQty = Number.isFinite(numericValue) ? Math.min(MAX_SACKS, Math.max(0, numericValue)) : 0;
+  if (numericValue > MAX_SACKS) {
+    alert("El limite por contenedor es de 400 sacos de 50 kg.");
+  }
+  cart[product] = nextQty;
+  saveCart(cart);
+  if (totalItems() === 0) hideCheckoutDetails();
+  renderCart();
+}
+
 function setOrderType(type) {
   const input = document.querySelector(`input[name="tipoPedido"][value="${type}"]`);
   if (input) input.checked = true;
@@ -107,7 +135,14 @@ function setPaymentMethod(method) {
   });
   document.getElementById("pago-seleccionado").textContent = paymentMethodLabels[method];
   const cardFields = document.getElementById("card-payment-fields");
-  if (cardFields) cardFields.style.display = method === "tarjeta" ? "block" : "none";
+  const directFields = document.getElementById("direct-card-fields");
+  const paypalSim = document.getElementById("paypal-sandbox-sim");
+  const acceptedCards = document.getElementById("accepted-card-logos");
+  if (cardFields) cardFields.style.display = method === "efectivo" ? "none" : "block";
+  if (directFields) directFields.style.display = method === "tarjeta" ? "block" : "none";
+  if (acceptedCards) acceptedCards.style.display = method === "tarjeta" ? "flex" : "none";
+  if (paypalSim) paypalSim.style.display = method === "paypal" ? "block" : "none";
+  resetSandboxStatus();
 }
 
 function populateSelectors() {
@@ -138,7 +173,7 @@ function setCurrencyFromSelect() {
 async function loadRates() {
   const note = document.getElementById("rate-note");
   try {
-    const localResponse = await fetch("/api/rates?base=USD", { cache: "no-store" });
+    const localResponse = await fetch(apiUrl("/api/rates?base=USD"), { cache: "no-store" });
     if (localResponse.ok) {
       const data = await localResponse.json();
       if (data.rates) {
@@ -168,39 +203,94 @@ async function loadRates() {
 
 function showCheckoutDetails() {
   checkoutStep = 2;
-  document.getElementById("checkout-details").classList.add("open");
+  setCheckoutView(2);
+  const details = document.getElementById("checkout-details");
+  details.classList.add("open");
+  document.getElementById("payment-details").classList.remove("open");
   document.getElementById("step-productos").classList.add("complete");
+  document.getElementById("step-productos").classList.remove("active");
   document.getElementById("step-datos").classList.add("active");
   document.getElementById("step-pago").classList.remove("active");
   updateCheckoutButton();
-  setTimeout(() => document.getElementById("inp-nombre").focus(), 120);
+  moveToCheckoutSection(details, "inp-nombre");
 }
 
 function showPaymentDetails() {
   checkoutStep = 3;
-  document.getElementById("payment-details").classList.add("open");
+  setCheckoutView(3);
+  document.getElementById("checkout-details").classList.remove("open");
+  const paymentDetails = document.getElementById("payment-details");
+  paymentDetails.classList.add("open");
   document.getElementById("step-datos").classList.add("complete");
+  document.getElementById("step-datos").classList.remove("active");
   document.getElementById("step-pago").classList.add("active");
   updateCheckoutButton();
+  moveToCheckoutSection(paymentDetails);
+}
+
+function moveToCheckoutSection(section, focusId) {
+  if (!section) return;
+  section.classList.remove("checkout-section-focus");
+  window.setTimeout(() => {
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
+    section.classList.add("checkout-section-focus");
+    if (focusId) {
+      const input = document.getElementById(focusId);
+      window.setTimeout(() => input?.focus({ preventScroll: true }), 420);
+    }
+    window.setTimeout(() => section.classList.remove("checkout-section-focus"), 1400);
+  }, 80);
 }
 
 function hideCheckoutDetails() {
   checkoutStep = 1;
+  setCheckoutView(1);
   document.getElementById("checkout-details").classList.remove("open");
   document.getElementById("payment-details").classList.remove("open");
   document.getElementById("step-productos").classList.remove("complete");
+  document.getElementById("step-productos").classList.add("active");
   document.getElementById("step-datos").classList.remove("complete", "active");
   document.getElementById("step-pago").classList.remove("active");
   updateCheckoutButton();
 }
 
+function setCheckoutView(step) {
+  const productsPanel = document.getElementById("checkout-products-panel");
+  const detailsPanel = document.getElementById("checkout-details");
+  const paymentPanel = document.getElementById("payment-details");
+  productsPanel?.classList.toggle("checkout-panel-hidden", step !== 1);
+  detailsPanel?.classList.toggle("checkout-panel-hidden", step !== 2);
+  paymentPanel?.classList.toggle("checkout-panel-hidden", step !== 3);
+}
+
+function goToCheckoutStep(step) {
+  if (step === checkoutStep) return;
+  if (step === 1) return hideCheckoutDetails();
+  if (step === 2) {
+    if (totalItems() === 0) {
+      alert("Por favor agrega al menos un saco antes de continuar.");
+      return;
+    }
+    return showCheckoutDetails();
+  }
+  if (step === 3) {
+    if (totalItems() === 0) {
+      alert("Por favor agrega al menos un saco antes de continuar.");
+      return;
+    }
+    if (!validateContact()) return;
+    return showPaymentDetails();
+  }
+}
+
 function updateCheckoutButton() {
   const button = document.getElementById("btn-confirmar");
   const hasProducts = totalItems() > 0;
+  const paymentMethod = document.querySelector('input[name="formaPago"]:checked')?.value || "tarjeta";
   if(!button) return;
   button.disabled = !hasProducts;
   button.textContent = hasProducts
-    ? (checkoutStep === 1 ? "Continuar con mis datos ->" : checkoutStep === 2 ? "Continuar a pago ->" : "Confirmar pedido ->")
+    ? (checkoutStep === 1 ? "Continuar con mis datos ->" : checkoutStep === 2 ? "Continuar a pago ->" : paymentMethod === "paypal" ? "Confirmar con PayPal ->" : "Confirmar pedido ->")
     : "Agrega sacos para continuar";
 }
 
@@ -224,12 +314,12 @@ function renderCart() {
         <div class="prod-row-icon" style="background-image:url('${products[id].image}')"></div>
         <div class="prod-row-info">
           <p class="prod-row-name">${products[id].name}</p>
-          <p class="prod-row-price">${formatUsd(products[id].price)} / saco 50 kg · ${products[id].specs}</p>
+          <p class="prod-row-price">${formatUsd(products[id].price)} / saco de 50 kg</p>
+          <p class="prod-row-desc">${products[id].description}</p>
         </div>
         <div class="qty-ctrl">
-          <button class="qty-btn" onclick="changeQty('${id}', -1)">-</button>
-          <span class="qty-num">${qty}</span>
-          <button class="qty-btn" onclick="changeQty('${id}', 1)">+</button>
+          <label class="qty-label" for="qty-${id}">Sacos</label>
+          <input class="qty-input" id="qty-${id}" type="number" min="0" max="${MAX_SACKS}" step="1" value="${qty}" inputmode="numeric" onchange="setQty('${id}', this.value)" onblur="setQty('${id}', this.value)">
         </div>
       </div>
     `).join("");
@@ -280,6 +370,8 @@ function handleCheckoutAction() {
     if (!validateContact()) return;
     return showPaymentDetails();
   }
+  const pago = document.querySelector('input[name="formaPago"]:checked')?.value || "tarjeta";
+  if (pago === "paypal" && !paypalSandboxApproved) return simulatePayPalPayment();
   confirmarPedido();
 }
 
@@ -292,8 +384,8 @@ function validateContact() {
     document.getElementById("inp-nombre").focus();
     return false;
   }
-  if (!email && !tel) {
-    alert("Por favor ingresa al menos un metodo de contacto.");
+  if (!email) {
+    alert("Por favor ingresa tu correo electronico para enviarte la factura.");
     document.getElementById("inp-email").focus();
     return false;
   }
@@ -302,8 +394,6 @@ function validateContact() {
 
 function validateCardFields() {
   const processor = document.querySelector('input[name="tipoTarjeta"]:checked')?.value;
-  if (processor === "paypal_sandbox") return true;
-
   const ids = ["inp-card-name", "inp-card-number", "inp-card-exp", "inp-card-cvv"];
   for (const id of ids) {
     const input = document.getElementById(id);
@@ -316,7 +406,66 @@ function validateCardFields() {
   return true;
 }
 
-function confirmarPedido() {
+function buildInvoicePayload(processorLabel) {
+  const subtotal = getSubtotal();
+  const localTotal = subtotal * (exchangeRates[currentCurrency] || 1);
+  return {
+    customer: {
+      name: document.getElementById("inp-nombre").value.trim(),
+      email: document.getElementById("inp-email").value.trim(),
+      phone: document.getElementById("inp-tel").value.trim(),
+      notes: document.getElementById("inp-notas").value.trim()
+    },
+    destination: {
+      country: currentCountry,
+      currency: currentCurrency,
+      exchangeRate: exchangeRates[currentCurrency] || 1
+    },
+    payment: {
+      method: processorLabel
+    },
+    items: cartItems().map(([id, quantity]) => ({
+      id,
+      name: products[id].name,
+      quantity,
+      unitPrice: products[id].price,
+      total: products[id].price * quantity,
+      weightKg: quantity * SACK_KG
+    })),
+    totals: {
+      subtotalUsd: subtotal,
+      totalLocal: localTotal,
+      sacks: totalItems(),
+      weightKg: totalItems() * SACK_KG
+    }
+  };
+}
+
+async function sendInvoice(orderPayload) {
+  let response;
+  try {
+    response = await fetch(apiUrl("/api/invoice-email"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderPayload)
+    });
+  } catch {
+    throw new Error("Factura pendiente de envio. Inicia el servidor con npm start y abre http://localhost:3000/carrito.html.");
+  }
+  const text = await response.text();
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error("No se recibio respuesta valida del backend. Ejecuta npm start y abre http://localhost:3000/carrito.html.");
+  }
+  if (!response.ok || !data.ok) {
+    throw new Error(data.error || "No se pudo enviar la factura.");
+  }
+  return data.invoice;
+}
+
+async function confirmarPedido() {
   const nombre = document.getElementById("inp-nombre").value.trim();
   const tipo = document.querySelector('input[name="tipoPedido"]:checked')?.value || "exportacion";
   const pago = document.querySelector('input[name="formaPago"]:checked')?.value || "tarjeta";
@@ -327,14 +476,33 @@ function confirmarPedido() {
   if (!validateContact()) return;
   if (pago === "tarjeta" && !validateCardFields()) return;
 
+  const processorLabel = pago === "tarjeta" ? cardProcessorLabels[processor] : paymentMethodLabels[pago];
+  const invoiceNoticeId = "invoice-send-status";
   document.getElementById("order-success").innerHTML = `
     <div class="success-icon">OK</div>
     <p class="success-title">Pedido enviado</p>
-    <p class="success-sub">Hola <strong>${nombre}</strong>, recibimos tu pedido de <strong>${totalItems()} sacos</strong> para <strong>${currentCountry}</strong>. Total estimado: <strong>${formatUsd(total)}</strong> / <strong>${formatCurrency(localTotal, currentCurrency)}</strong>, pago en <strong>${paymentMethodLabels[pago]} (${processor})</strong>.</p>
+    <p class="success-sub">Hola <strong>${nombre}</strong>, recibimos tu pedido de <strong>${totalItems()} sacos</strong> para <strong>${currentCountry}</strong>. Total estimado: <strong>${formatUsd(total)}</strong> / <strong>${formatCurrency(localTotal, currentCurrency)}</strong>, pago en <strong>${processorLabel}</strong>.</p>
+    <p class="invoice-status pending" id="${invoiceNoticeId}">Enviando factura electronica al correo del cliente...</p>
     <button class="btn-primary" style="margin-top:14px;width:100%" onclick="resetCart()">Hacer otro pedido</button>
   `;
   document.getElementById("order-success").style.display = "block";
   document.getElementById("btn-confirmar").style.display = "none";
+
+  const invoiceStatus = document.getElementById(invoiceNoticeId);
+  try {
+    const invoice = await sendInvoice(buildInvoicePayload(processorLabel));
+    if (invoiceStatus) {
+      invoiceStatus.className = "invoice-status sent";
+      invoiceStatus.textContent = `Factura ${invoice.number} enviada a ${document.getElementById("inp-email").value.trim()}.`;
+    }
+  } catch (error) {
+    if (invoiceStatus) {
+      invoiceStatus.className = "invoice-status error";
+      invoiceStatus.textContent = error.message.startsWith("Factura pendiente")
+        ? error.message
+        : `Pedido registrado. La factura no se pudo enviar: ${error.message}`;
+    }
+  }
 }
 
 function resetCart() {
@@ -345,6 +513,8 @@ function resetCart() {
   });
   setOrderType("exportacion");
   setPaymentMethod("tarjeta");
+  paypalSandboxApproved = false;
+  resetSandboxStatus();
   hideCheckoutDetails();
   document.getElementById("order-success").style.display = "none";
   document.getElementById("btn-confirmar").style.display = "block";
@@ -362,33 +532,59 @@ function setCardProcessor(processor) {
   const directFields = document.getElementById("direct-card-fields");
   const paypalSim = document.getElementById("paypal-sandbox-sim");
   
-  if (processor === "paypal_sandbox") {
-    if (directFields) directFields.style.display = "none";
-    if (paypalSim) paypalSim.style.display = "block";
-  } else {
-    if (directFields) directFields.style.display = "block";
-    if (paypalSim) paypalSim.style.display = "none";
-  }
+  if (directFields) directFields.style.display = processor === "paypal_sandbox" ? "none" : "block";
+  if (paypalSim) paypalSim.style.display = processor === "paypal_sandbox" ? "block" : "none";
+  resetSandboxStatus();
 }
 
 function simulatePayPalPayment() {
-  const btn = event.target;
+  if (!validateContact()) return;
+
+  const btn = document.querySelector(".paypal-sandbox-btn");
+  const status = document.getElementById("paypal-sandbox-status");
+  const checkoutButton = document.getElementById("btn-confirmar");
+  if (!btn || !status) return confirmarPedido();
+
   btn.disabled = true;
+  if (checkoutButton) checkoutButton.disabled = true;
   btn.textContent = "Conectando con PayPal...";
+  status.textContent = "Conectando con PayPal";
+  status.className = "sandbox-status processing";
   
   setTimeout(() => {
-    btn.textContent = "Procesando Sandbox...";
+    btn.textContent = "Procesando aprobacion...";
+    status.textContent = "Procesando aprobacion";
     setTimeout(() => {
-      alert("Simulacion de PayPal Sandbox exitosa. Pago verificado.");
-      btn.textContent = "Pago Completado";
+      paypalSandboxApproved = true;
+      status.textContent = "Aprobado por PayPal";
+      status.className = "sandbox-status approved";
+      btn.textContent = "Pago aprobado";
+      if (checkoutButton) checkoutButton.disabled = false;
       confirmarPedido();
     }, 1500);
   }, 1000);
+}
+
+function resetSandboxStatus() {
+  paypalSandboxApproved = false;
+  const btn = document.querySelector(".paypal-sandbox-btn");
+  const status = document.getElementById("paypal-sandbox-status");
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = "Confirmar con PayPal";
+  }
+  if (status) {
+    status.textContent = "Pendiente de aprobacion";
+    status.className = "sandbox-status pending";
+  }
+  updateCheckoutButton();
 }
 
 populateSelectors();
 if(document.getElementById("inp-pais")) document.getElementById("inp-pais").value = currentCountry;
 setOrderType("exportacion");
 setPaymentMethod("tarjeta");
+setCardProcessor("visa");
+setCheckoutView(1);
 renderCart();
 loadRates();
