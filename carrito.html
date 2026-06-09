@@ -7,70 +7,155 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
 <body>
   <nav id="navbar">
-    <div class="nav-logo" onclick="window.location.href='index.html'">Tierra <span>Dorada</span></div>
+    <div class="nav-logo logo-mark" onclick="window.location.href='index.html'">
+      <img src="img/logo.jpg" alt="Tierra Dorada Exportaciones">
+      <span class="logo-text">Tierra <strong>Dorada</strong></span>
+    </div>
     <ul class="nav-links">
-      <li><a href="index.html#producto">Productos</a></li>
+      <li><a href="index.html#producto">Producto</a></li>
+      <li><a href="index.html#exportacion">Exportacion</a></li>
       <li><a href="index.html#nosotros">Nosotros</a></li>
-      <li><a href="index.html#proceso">Proceso</a></li>
     </ul>
     <button class="nav-cta" onclick="window.location.href='carrito.html'">Carrito <span class="cart-count" id="cart-count">0</span></button>
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu">&#9776;</button>
   </nav>
 
+  <div class="nav-mobile-menu" id="mobileMenu">
+    <a href="index.html#producto" onclick="closeMobile()">Producto</a>
+    <a href="index.html#exportacion" onclick="closeMobile()">Exportacion</a>
+    <a href="index.html#nosotros" onclick="closeMobile()">Nosotros</a>
+    <a href="carrito.html" class="mobile-cta" onclick="closeMobile()">Ver carrito</a>
+  </div>
+
   <main class="page-shell">
-    <button class="btn-secondary page-back" onclick="window.location.href='index.html#producto'">← Seguir comprando</button>
+    <button class="btn-secondary page-back" onclick="window.location.href='index.html#producto'"><- Seguir comprando</button>
 
     <section class="section cart-page">
       <div class="section-header">
-        <div class="section-eyebrow">Compra</div>
+        <div class="section-eyebrow">Cotizacion exportadora</div>
         <h1 class="section-title">Carrito de compra</h1>
-        <p class="section-sub">Revisa tus productos, elige el tipo de compra y deja tus datos para coordinar.</p>
+        <p class="section-sub">Compra cacao tostado en sacos de 50 kg. El limite por contenedor es de 400 sacos.</p>
       </div>
 
       <div class="order-grid">
         <div class="order-left">
           <div class="checkout-steps">
-            <div class="checkout-step active" id="step-productos">
-              <span>1</span>
-              <p>Productos</p>
-            </div>
+            <div class="checkout-step active" id="step-productos"><span>1</span><p>Productos</p></div>
             <div class="checkout-line"></div>
-            <div class="checkout-step" id="step-datos">
-              <span>2</span>
-              <p>Tus datos</p>
-            </div>
+            <div class="checkout-step" id="step-datos"><span>2</span><p>Tus datos</p></div>
+            <div class="checkout-line"></div>
+            <div class="checkout-step" id="step-pago"><span>3</span><p>Pago</p></div>
           </div>
 
-          <div class="order-section-title">Productos en el carrito</div>
+          <div class="order-section-title">Producto en el carrito</div>
           <div id="cart-items"></div>
+
+          <div class="export-tools">
+            <div class="order-section-title">Pais, moneda y conversion</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="country-select">Pais destino</label>
+                <select id="country-select" onchange="setDestinationFromSelect()"></select>
+              </div>
+              <div class="form-group">
+                <label for="currency-select">Moneda</label>
+                <select id="currency-select" onchange="setCurrencyFromSelect()"></select>
+              </div>
+            </div>
+            <div class="converter-card">
+              <div>
+                <span>Precio en USD</span>
+                <strong id="converter-usd">$0.00</strong>
+              </div>
+              <div>
+                <span>Precio moneda local</span>
+                <strong id="converter-local">0.00</strong>
+              </div>
+            </div>
+            <p class="rate-note" id="rate-note">Cargando tasa de cambio...</p>
+          </div>
 
           <div class="checkout-details" id="checkout-details">
             <div class="order-section-title" style="margin-top:24px">Tus datos</div>
-            <p class="checkout-helper">Déjanos un contacto para confirmar disponibilidad, pago y envío.</p>
+            <p class="checkout-helper">Dejanos un contacto para confirmar disponibilidad, pago, documentacion y envio internacional.</p>
             <div class="form-group">
               <label for="inp-nombre">Nombre completo</label>
               <input type="text" id="inp-nombre" placeholder="Tu nombre completo">
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label for="inp-email">Correo electrónico</label>
+                <label for="inp-email">Correo electronico</label>
                 <input type="email" id="inp-email" placeholder="correo@ejemplo.com">
               </div>
               <div class="form-group">
-                <label for="inp-tel">Teléfono / WhatsApp</label>
+                <label for="inp-tel">Telefono / WhatsApp</label>
                 <input type="tel" id="inp-tel" placeholder="+503 0000-0000">
               </div>
             </div>
             <div class="form-group">
-              <label for="inp-pais">País</label>
-              <input type="text" id="inp-pais" placeholder="El Salvador...">
+              <label for="inp-pais">Pais</label>
+              <input type="text" id="inp-pais" placeholder="Suecia, Tailandia, Canada...">
             </div>
             <div class="form-group">
               <label for="inp-notas">Notas adicionales</label>
-              <textarea id="inp-notas" placeholder="Presentación especial, fecha de entrega, etc." rows="3"></textarea>
+              <textarea id="inp-notas" placeholder="Puerto destino, fecha estimada, documentacion requerida, etc." rows="3"></textarea>
+            </div>
+          </div>
+
+          <div class="checkout-details payment-details" id="payment-details">
+            <div class="order-section-title" style="margin-top:24px">Forma de pago</div>
+            <p class="checkout-helper">Elige como deseas pagar. Tarjeta trabaja con metodos de prueba y PayPal Sandbox para una compra irreal.</p>
+            <div class="payment-options">
+              <label class="payment-option active" onclick="setPaymentMethod('tarjeta')">
+                <input type="radio" name="formaPago" value="tarjeta" checked>
+                <span><strong>Tarjeta</strong><small>Debito o credito.</small></span>
+              </label>
+              <label class="payment-option" onclick="setPaymentMethod('efectivo')">
+                <input type="radio" name="formaPago" value="efectivo">
+                <span><strong>Efectivo</strong><small>Pago al coordinar.</small></span>
+              </label>
+            </div>
+            <div class="card-payment-fields" id="card-payment-fields">
+              <div class="card-methods">
+                <label class="card-method active" onclick="setCardProcessor('visa')">
+                  <input type="radio" name="tipoTarjeta" value="visa" checked>
+                  <img src=\"https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg\" alt=\"Visa\" class=\"card-brand-img\">
+                </label>
+                <label class="card-method" onclick="setCardProcessor('mastercard')">
+                  <input type="radio" name="tipoTarjeta" value="mastercard">
+                  <img src=\"https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg\" alt=\"Mastercard\" class=\"card-brand-img\">
+                </label>
+                <label class="card-method" onclick="setCardProcessor('amex')">
+                  <input type="radio" name="tipoTarjeta" value="amex">
+                  <img src=\"https://upload.wikimedia.org/wikipedia/commons/3/30/American_Express_logo.svg\" alt=\"Amex\" class=\"card-brand-img\">
+                </label>
+                <label class="card-method paypal-method" onclick="setCardProcessor('paypal_sandbox')">
+                  <input type="radio" name="tipoTarjeta" value="paypal_sandbox">
+                  <img src=\"https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg\" alt=\"PayPal\" class=\"card-brand-img\">
+                </label>
+              </div>
+
+              <div id="direct-card-fields">
+                <div class="form-group"><label for="inp-card-name">Nombre en la tarjeta</label><input type="text" id="inp-card-name" placeholder="Como aparece en la tarjeta"></div>
+                <div class="form-group"><label for="inp-card-number">Numero de tarjeta</label><input type="text" id="inp-card-number" placeholder="0000 0000 0000 0000" maxlength="19"></div>
+                <div class="form-row">
+                  <div class="form-group"><label for="inp-card-exp">Vencimiento</label><input type="text" id="inp-card-exp" placeholder="MM/AA" maxlength="5"></div>
+                  <div class="form-group"><label for="inp-card-cvv">CVV</label><input type="text" id="inp-card-cvv" placeholder="123" maxlength="4"></div>
+                </div>
+              </div>
+
+              <div class="paypal-sandbox-sim" id="paypal-sandbox-sim">
+                <div>
+                  <img src=\"https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg\" alt=\"PayPal\" class=\"card-brand-img\">
+                  <p>Simula una aprobacion de pago sin cobrar dinero real.</p>
+                </div>
+                <button type="button" class="paypal-sandbox-btn" onclick="simulatePayPalPayment()">Pagar con PayPal Sandbox</button>
+                <span id="paypal-sandbox-status">Pendiente de aprobacion</span>
+              </div>
             </div>
           </div>
         </div>
@@ -80,42 +165,31 @@
           <div class="summary-purchase">
             <p class="summary-purchase-title">Tipo de compra</p>
             <div class="purchase-options">
-              <label class="purchase-option active" onclick="setOrderType('personal')">
-                <input type="radio" name="tipoPedido" value="personal" checked>
-                <span><strong>Consumo</strong><small>Personal o familiar.</small></span>
-              </label>
-              <label class="purchase-option featured" onclick="setOrderType('mayoreo')">
+              <label class="purchase-option" onclick="setOrderType('mayoreo')">
                 <input type="radio" name="tipoPedido" value="mayoreo">
-                <span><strong>Mayoreo</strong><small>Tiendas, cafeterías o reventa.</small></span>
+                <span><strong>Mayoreo</strong><small>Tiendas, cafeterias o reventa.</small></span>
               </label>
-              <label class="purchase-option" onclick="setOrderType('exportacion')">
-                <input type="radio" name="tipoPedido" value="exportacion">
-                <span><strong>Exportación</strong><small>Coordinación internacional.</small></span>
+              <label class="purchase-option active featured" onclick="setOrderType('exportacion')">
+                <input type="radio" name="tipoPedido" value="exportacion" checked>
+                <span><strong>Exportacion</strong><small>Compra internacional.</small></span>
               </label>
             </div>
           </div>
 
           <div id="resumen-items"></div>
           <div class="summary-totals">
-            <div class="total-row">
-              <span class="total-label">Subtotal</span>
-              <span class="total-val" id="subtotal">$0.00</span>
-            </div>
-            <div class="total-row">
-              <span class="total-label">Envío</span>
-              <span class="total-val" id="envio">A coordinar</span>
-            </div>
-            <div class="total-row">
-              <span class="total-label">Modalidad</span>
-              <span class="total-val" id="tipo-seleccionado">Consumo</span>
-            </div>
-            <div class="total-row total-final-row">
-              <span class="total-label-final">Total estimado</span>
-              <span class="total-final" id="total">$0.00</span>
-            </div>
+            <div class="total-row"><span class="total-label">Subtotal USD</span><span class="total-val" id="subtotal">$0.00</span></div>
+            <div class="total-row"><span class="total-label">Total moneda local</span><span class="total-val" id="total-local">0.00</span></div>
+            <div class="total-row"><span class="total-label">Sacos</span><span class="total-val" id="sacos-total">0 / 400</span></div>
+            <div class="total-row"><span class="total-label">Peso total</span><span class="total-val" id="peso-total">0 kg</span></div>
+            <div class="total-row"><span class="total-label">Envio</span><span class="total-val" id="envio">A coordinar</span></div>
+            <div class="total-row"><span class="total-label">Destino</span><span class="total-val" id="destino-seleccionado">Suecia</span></div>
+            <div class="total-row"><span class="total-label">Modalidad</span><span class="total-val" id="tipo-seleccionado">Exportacion</span></div>
+            <div class="total-row"><span class="total-label">Pago</span><span class="total-val" id="pago-seleccionado">Tarjeta</span></div>
+            <div class="total-row total-final-row"><span class="total-label-final">Total estimado</span><span class="total-final" id="total">$0.00</span></div>
           </div>
-          <button class="confirm-btn" id="btn-confirmar" onclick="handleCheckoutAction()">Continuar con mis datos →</button>
-          <p class="order-note">Al confirmar recibirás respuesta por WhatsApp o correo.</p>
+          <button class="confirm-btn" id="btn-confirmar" onclick="handleCheckoutAction()">Continuar con mis datos -></button>
+          <p class="order-note">El precio se muestra en dolares y en la moneda del pais destino. La logistica internacional se coordina despues de confirmar.</p>
           <div id="order-success" class="order-success" style="display:none"></div>
         </aside>
       </div>
