@@ -1,57 +1,67 @@
+const MAX_SACKS = 400;
 const products = {
-  nat: {
-    name: 'Cacao Natural',
-    price: 12.50,
-    image: 'img/cacao-natural.png',
-    eyebrow: 'Sin procesar',
-    desc: 'Semillas frescas del fruto, conservando antioxidantes, minerales y el perfil natural del cacao salvadoreño.',
-    tags: ['Sin procesar', 'Antioxidantes', 'Natural'],
-    specs: ['Textura fresca', 'Ideal para transformación', 'Origen salvadoreño']
-  },
-  fer: {
-    name: 'Cacao Fermentado',
-    price: 16.00,
-    image: 'img/cacao-fermentado.png',
-    eyebrow: 'Más pedido',
-    desc: 'Fermentación artesanal con notas afrutadas y dulces para un sabor más complejo y profundo.',
-    tags: ['Afrutado', 'Artesanal', 'Gourmet'],
-    specs: ['Perfil aromático', 'Proceso controlado', 'Ideal para chocolatería']
-  },
   tos: {
     name: 'Cacao Tostado',
-    price: 19.00,
+    price: 190.00,
     image: 'img/cacao-tostado.png',
-    eyebrow: 'Premium',
-    desc: 'Tostado controlado para máximo aroma, textura crujiente y sabor intenso. Listo para consumo o exportación.',
-    tags: ['Premium', 'Export', 'Sin conservantes'],
-    specs: ['Aroma intenso', 'Textura crujiente', 'Listo para consumo']
+    eyebrow: 'Etiqueta: Premium Export',
+    desc: 'Cacao tostado salvadoreno en saco de 50 kg. Tostado controlado para maximo aroma, textura crujiente y sabor intenso. Preparado para exportacion internacional.',
+    tags: ['Etiqueta: Premium', 'Etiqueta: Export', 'Saco 50 kg', 'Max. 400 sacos por contenedor'],
+    specs: [
+      ['Presentacion', 'Saco de 50 kg'],
+      ['Origen', 'El Salvador'],
+      ['Contenedor', 'Hasta 400 sacos'],
+      ['Peso maximo', '20,000 kg'],
+      ['Destino destacado', 'Suecia'],
+      ['Precio base', 'USD']
+    ]
   }
 };
 
-const params = new URLSearchParams(window.location.search);
-const currentId = products[params.get('producto')] ? params.get('producto') : 'nat';
+const currentId = 'tos';
+const hamburger = document.getElementById('hamburger');
+const mobileMenu = document.getElementById('mobileMenu');
+
+if (hamburger && mobileMenu) {
+  hamburger.addEventListener('click', () => mobileMenu.classList.toggle('open'));
+}
+
+function closeMobile() {
+  if (mobileMenu) mobileMenu.classList.remove('open');
+}
 
 function getCart() {
-  return JSON.parse(localStorage.getItem('tdCart') || '{"nat":0,"fer":0,"tos":0}');
+  try {
+    const stored = JSON.parse(localStorage.getItem('tdCart') || '{"tos":0}');
+    return { tos: Math.min(MAX_SACKS, Math.max(0, Number(stored.tos || 0))) };
+  } catch {
+    return { tos: 0 };
+  }
 }
 
 function saveCart(cart) {
-  localStorage.setItem('tdCart', JSON.stringify(cart));
+  localStorage.setItem('tdCart', JSON.stringify({ tos: Math.min(MAX_SACKS, Math.max(0, Number(cart.tos || 0))) }));
 }
 
 function updateCartBadge() {
-  const cart = getCart();
-  const count = Object.values(cart).reduce((sum, value) => sum + value, 0);
-  document.getElementById('cart-count').textContent = count;
-  document.getElementById('cart-count').classList.toggle('has-items', count > 0);
+  const count = getCart().tos;
+  const badge = document.getElementById('cart-count');
+  if (!badge) return;
+  badge.textContent = count;
+  badge.classList.toggle('has-items', count > 0);
 }
 
 function addProduct(id) {
   const cart = getCart();
+  if (cart.tos >= MAX_SACKS) {
+    alert('El limite por contenedor es de 400 sacos de 50 kg.');
+    return;
+  }
   cart[id] = (cart[id] || 0) + 1;
   saveCart(cart);
   updateCartBadge();
   const toast = document.getElementById('cart-toast');
+  if (!toast) return;
   toast.textContent = `${products[id].name} agregado al carrito`;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 1500);
@@ -66,10 +76,6 @@ function buyCurrentProduct() {
   window.location.href = `carrito.html?producto=${currentId}`;
 }
 
-function openProduct(id) {
-  window.location.href = `producto.html?producto=${id}`;
-}
-
 function renderProduct() {
   const product = products[currentId];
   document.title = `${product.name} - Tierra Dorada`;
@@ -78,31 +84,14 @@ function renderProduct() {
   document.getElementById('product-eyebrow').textContent = product.eyebrow;
   document.getElementById('product-title').textContent = product.name;
   document.getElementById('product-desc').textContent = product.desc;
-  document.getElementById('product-price').innerHTML = `$${product.price.toFixed(2)} <span>/ 500g</span>`;
+  document.getElementById('product-price').innerHTML = `$${product.price.toFixed(2)} <span>/ saco 50 kg</span>`;
   document.getElementById('product-tags').innerHTML = product.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
-
-  document.querySelector('.product-detail-panel').innerHTML = product.specs.map(spec => `
+  document.querySelector('.product-detail-panel').innerHTML = product.specs.map(([label, value]) => `
     <div>
-      <p class="detail-label">Detalle</p>
-      <strong>${spec}</strong>
+      <p class="detail-label">${label}</p>
+      <strong>${value}</strong>
     </div>
   `).join('');
-
-  document.getElementById('related-products').innerHTML = Object.entries(products)
-    .filter(([id]) => id !== currentId)
-    .map(([id, item]) => `
-      <div class="product-card" onclick="openProduct('${id}')">
-        <div class="product-img" style="background-image:linear-gradient(rgba(76,43,8,0.08), rgba(76,43,8,0.18)), url('${item.image}')"></div>
-        <div class="product-body">
-          <div class="product-name">${item.name}</div>
-          <p class="product-desc">${item.desc}</p>
-          <div class="product-footer">
-            <div class="product-price">$${item.price.toFixed(2)} <span>/ 500g</span></div>
-            <button class="btn-cart" onclick="event.stopPropagation(); addProduct('${id}')">Agregar</button>
-          </div>
-        </div>
-      </div>
-    `).join('');
 }
 
 renderProduct();

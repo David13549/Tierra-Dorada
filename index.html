@@ -3,414 +3,209 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tierra Dorada Exportaciones — Cacao de El Salvador</title>
+  <title>Tierra Dorada Exportaciones - Cacao tostado de El Salvador</title>
   <link rel="stylesheet" href="css/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-
-  <!-- NAV -->
   <nav id="navbar">
-    <div class="nav-logo">Tierra <span>Dorada</span></div>
+    <div class="nav-logo logo-mark">
+      <img src="img/logo.jpg" alt="Tierra Dorada Exportaciones">
+      <span class="logo-text">Tierra <strong>Dorada</strong></span>
+    </div>
     <ul class="nav-links">
       <li><a href="#producto">Producto</a></li>
+      <li><a href="#exportacion">Exportacion</a></li>
       <li><a href="#nosotros">Nosotros</a></li>
-      <li><a href="#proceso">Proceso</a></li>
       <li><a href="carrito.html">Compra</a></li>
     </ul>
     <button class="nav-cta" onclick="goToCart()">Carrito <span class="cart-count" id="cart-count">0</span></button>
-    <button class="nav-hamburger" id="hamburger" aria-label="Menú">&#9776;</button>
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu">&#9776;</button>
   </nav>
+
   <div class="nav-mobile-menu" id="mobileMenu">
     <a href="#producto" onclick="closeMobile()">Producto</a>
+    <a href="#exportacion" onclick="closeMobile()">Exportacion</a>
     <a href="#nosotros" onclick="closeMobile()">Nosotros</a>
-    <a href="#proceso" onclick="closeMobile()">Proceso</a>
-    <a href="carrito.html" onclick="closeMobile()">Compra</a>
     <a href="carrito.html" class="mobile-cta" onclick="closeMobile()">Ver carrito</a>
   </div>
 
-  <!-- HERO -->
   <section class="hero" id="inicio">
     <div class="hero-text">
-      <div class="pill-origin">🌱 El Salvador · Theobroma cacao</div>
+      <div class="pill-origin">El Salvador · Theobroma cacao</div>
       <div class="hero-badge">De El Salvador Para El Mundo</div>
-      <h1 class="hero-title">El auténtico<br>sabor del <em>cacao</em><br>puro.</h1>
-      <p class="hero-sub">Semillas seleccionadas, fermentadas y tostadas con procesos controlados. Sin conservantes. Con historia mesoamericana.</p>
+      <h1 class="hero-title">Cacao tostado<br>salvadoreno<br><em>para exportacion.</em></h1>
+      <p class="hero-sub">Un solo producto: cacao tostado en sacos de 50 kg, listo para compradores internacionales. Cada contenedor acepta hasta 400 sacos.</p>
       <div class="hero-btns">
-        <button class="btn-primary" onclick="document.getElementById('producto').scrollIntoView({behavior:'smooth'})">Ver Productos</button>
-        <button class="btn-secondary" onclick="document.getElementById('nosotros').scrollIntoView({behavior:'smooth'})">Nuestra historia →</button>
+        <button class="btn-primary" onclick="document.getElementById('producto').scrollIntoView({behavior:'smooth'})">Ver producto</button>
+        <button class="btn-secondary" onclick="goToCart()">Cotizar exportacion -></button>
       </div>
     </div>
     <div class="hero-visual">
       <div class="hero-card">
         <div class="hero-card-top">
-          <div class="hero-icon">🍫</div>
-          <div class="hero-card-label">Producto Estrella</div>
+          <div class="hero-icon">TD</div>
+          <div class="hero-card-label">Producto unico</div>
         </div>
         <div class="hero-card-val">Cacao Tostado</div>
-        <div class="hero-card-desc">Aroma natural · Textura crujiente · 100% puro</div>
+        <div class="hero-card-desc">Saco 50 kg · Etiquetas Premium Export</div>
       </div>
       <div class="hero-cards-row">
         <div class="hero-mini">
-          <div class="hero-mini-num">2021</div>
-          <div class="hero-mini-label">Fundación, La Unión</div>
+          <div class="hero-mini-num">400</div>
+          <div class="hero-mini-label">Sacos maximo por contenedor</div>
         </div>
         <div class="hero-mini">
-          <div class="hero-mini-num">4</div>
-          <div class="hero-mini-label">Valores core</div>
+          <div class="hero-mini-num">Suecia</div>
+          <div class="hero-mini-label">Destino de mayor exportacion</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- PRODUCTOS -->
   <section class="section section-alt" id="producto">
     <div class="section-header">
-      <div class="section-eyebrow">Catálogo</div>
-      <h2 class="section-title">Nuestros Productos</h2>
-      <p class="section-sub">Cacao salvadoreño con valor agregado, listo para exportación y consumo directo.</p>
+      <div class="section-eyebrow">Catalogo exportador</div>
+      <h2 class="section-title">Cacao Tostado</h2>
+      <p class="section-sub">Producto unico de Tierra Dorada. Precio base en dolares y conversion a moneda local del pais comprador.</p>
     </div>
-    <div class="product-grid">
-      <div class="product-card" onclick="goToProduct('nat')" role="button" tabindex="0" onkeydown="handleProductCardKey(event, 'nat')">
-        <div class="product-img product-img-nat">🌿</div>
+    <div class="product-grid product-grid-single">
+      <div class="product-card product-card-featured" onclick="goToProduct('tos')" role="button" tabindex="0" onkeydown="handleProductCardKey(event, 'tos')">
+        <div class="product-img product-img-toast"></div>
         <div class="product-body">
-          <div class="product-name">Cacao Natural</div>
-          <p class="product-desc">Semillas sin procesar, frescas del fruto. Conservan todos sus compuestos naturales, antioxidantes y minerales.</p>
-          <div class="product-tags">
-            <span class="tag">Sin procesar</span>
-            <span class="tag">Antioxidantes</span>
-          </div>
-          <div class="product-footer">
-            <div class="product-price">$12.50 <span>/ 500g</span></div>
-            <button class="btn-cart" onclick="event.stopPropagation(); addToCartAndGo('nat')">Agregar</button>
-          </div>
-        </div>
-      </div>
-      <div class="product-card product-card-featured" onclick="goToProduct('fer')" role="button" tabindex="0" onkeydown="handleProductCardKey(event, 'fer')">
-        <div class="product-img product-img-ferm">🫙</div>
-        <div class="product-body">
-          <span class="product-badge">Más pedido</span>
-          <div class="product-name">Cacao Fermentado</div>
-          <p class="product-desc">Proceso de fermentación artesanal. Notas afrutadas y dulces que desarrollan un sabor complejo y profundo.</p>
-          <div class="product-tags">
-            <span class="tag">Afrutado</span>
-            <span class="tag">Artesanal</span>
-            <span class="tag">Gourmet</span>
-          </div>
-          <div class="product-footer">
-            <div class="product-price">$16.00 <span>/ 500g</span></div>
-            <button class="btn-cart" onclick="event.stopPropagation(); addToCartAndGo('fer')">Agregar</button>
-          </div>
-        </div>
-      </div>
-      <div class="product-card" onclick="goToProduct('tos')" role="button" tabindex="0" onkeydown="handleProductCardKey(event, 'tos')">
-        <div class="product-img product-img-toast">🔥</div>
-        <div class="product-body">
-          <span class="product-badge product-badge-gold">Premium</span>
+          <span class="product-badge product-badge-gold">Etiqueta: Premium Export</span>
           <div class="product-name">Cacao Tostado</div>
-          <p class="product-desc">Tostado controlado para máximo aroma. Textura crujiente, sabor intenso. Sin conservantes. Listo para exportación.</p>
+          <p class="product-desc">Tostado controlado para maximo aroma, textura crujiente y sabor intenso. Presentacion exportable en saco de 50 kg.</p>
           <div class="product-tags">
-            <span class="tag">Premium</span>
-            <span class="tag">Export</span>
-            <span class="tag">Sin conserv.</span>
+            <span class="tag">Etiqueta: Premium</span>
+            <span class="tag">Etiqueta: Export</span>
+            <span class="tag">Saco 50 kg</span>
+            <span class="tag">Max. 400 sacos</span>
           </div>
           <div class="product-footer">
-            <div class="product-price">$19.00 <span>/ 500g</span></div>
-            <button class="btn-cart" onclick="event.stopPropagation(); addToCartAndGo('tos')">Agregar</button>
+            <div class="product-price">$190.00 <span>/ saco 50 kg</span></div>
+            <button class="btn-cart" onclick="event.stopPropagation(); addToCartAndGo('tos')">Cotizar</button>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- NOSOTROS -->
-  <section class="section" id="nosotros">
+  <section class="section" id="exportacion">
+    <div class="section-header">
+      <div class="section-eyebrow">Exportacion mundial</div>
+      <h2 class="section-title">Disponible para todos los paises</h2>
+      <p class="section-sub">El cotizador calcula el total en USD y en la moneda del pais destino usando tasas de cambio en tiempo real.</p>
+    </div>
+    <div class="export-grid">
+      <div class="export-card">
+        <strong>1 contenedor</strong>
+        <span>400 sacos de 50 kg</span>
+      </div>
+      <div class="export-card">
+        <strong>20,000 kg</strong>
+        <span>Capacidad maxima por contenedor</span>
+      </div>
+      <div class="export-card featured-export">
+        <strong>Suecia</strong>
+        <span>Pais destacado por mayor exportacion</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="nosotros">
     <div class="nosotros-grid">
       <div class="nosotros-text">
-        <div class="section-eyebrow">Quiénes somos</div>
+        <div class="section-eyebrow">Quienes somos</div>
         <h2 class="section-title" style="text-align:left">Tierra Dorada<br>Exportaciones</h2>
-        <p class="nosotros-p">Nacimos en 2021 en La Unión, El Salvador, como proyecto académico de estudiantes de Ingeniería en Logística y Aduanas del municipio de Conchagua. Lo que comenzó como una simulación se convirtió en una empresa real al identificar una oportunidad genuina en el mercado de productos agrícolas salvadoreños con valor agregado.</p>
-        <p class="nosotros-p">Hoy exportamos cacao de calidad con estándares internacionales, apoyando al productor local y llevando el sabor de El Salvador al mundo.</p>
+        <p class="nosotros-p">Nacimos en 2021 en La Union, El Salvador, como proyecto academico de estudiantes de Ingenieria en Logistica y Aduanas del municipio de Conchagua.</p>
+        <p class="nosotros-p">Hoy enfocamos nuestra oferta en cacao tostado de calidad para compradores internacionales, con empaques y calculos pensados para exportacion.</p>
         <div class="mision-vision">
           <div class="mv-card">
-            <div class="mv-icon">🎯</div>
+            <div class="mv-icon">TD</div>
             <div>
-              <div class="mv-title">Misión</div>
-              <p class="mv-text">Brindar productos de alta calidad garantizando procesos responsables, inocuos y transparentes, alineados con estándares internacionales.</p>
+              <div class="mv-title">Mision</div>
+              <p class="mv-text">Brindar cacao tostado de alta calidad con procesos responsables, inocuos y transparentes.</p>
             </div>
           </div>
           <div class="mv-card">
-            <div class="mv-icon">🌎</div>
+            <div class="mv-icon">EX</div>
             <div>
-              <div class="mv-title">Visión</div>
-              <p class="mv-text">Ser una empresa exportadora líder en Centroamérica por la calidad, confiabilidad y sostenibilidad de sus productos agrícolas.</p>
+              <div class="mv-title">Vision</div>
+              <p class="mv-text">Ser una empresa exportadora lider en Centroamerica por calidad, confiabilidad y sostenibilidad.</p>
             </div>
           </div>
         </div>
       </div>
       <div class="values-grid">
-        <div class="value-card">
-          <div class="value-icon">🏆</div>
-          <div class="value-name">Calidad</div>
-          <p class="value-desc">Compromiso con productos seguros y consistentes.</p>
-        </div>
-        <div class="value-card">
-          <div class="value-icon">🌿</div>
-          <div class="value-name">Responsabilidad</div>
-          <p class="value-desc">Respeto al medio ambiente y apoyo al productor local.</p>
-        </div>
-        <div class="value-card">
-          <div class="value-icon">🤝</div>
-          <div class="value-name">Transparencia</div>
-          <p class="value-desc">Relaciones comerciales claras y confiables.</p>
-        </div>
-        <div class="value-card">
-          <div class="value-icon">⭐</div>
-          <div class="value-name">Compromiso</div>
-          <p class="value-desc">Mejora continua en selección, tostado y exportación.</p>
-        </div>
+        <div class="value-card"><div class="value-icon">01</div><div class="value-name">Calidad</div><p class="value-desc">Productos seguros y consistentes.</p></div>
+        <div class="value-card"><div class="value-icon">02</div><div class="value-name">Responsabilidad</div><p class="value-desc">Respeto ambiental y apoyo al productor local.</p></div>
+        <div class="value-card"><div class="value-icon">03</div><div class="value-name">Transparencia</div><p class="value-desc">Relaciones comerciales claras y confiables.</p></div>
+        <div class="value-card"><div class="value-icon">04</div><div class="value-name">Compromiso</div><p class="value-desc">Mejora continua en seleccion, tostado y exportacion.</p></div>
       </div>
     </div>
   </section>
 
-  <!-- PROCESO -->
-  <section class="section section-alt" id="proceso">
+  <section class="section" id="proceso">
     <div class="section-header">
-      <div class="section-eyebrow">Del árbol a tu mesa</div>
+      <div class="section-eyebrow">Del arbol al contenedor</div>
       <h2 class="section-title">Nuestro Proceso</h2>
-      <p class="section-sub">Cada semilla pasa por cuatro etapas cuidadosamente controladas antes de llegar a tus manos.</p>
+      <p class="section-sub">Cada lote pasa por cuatro etapas controladas antes de empacarse para exportacion.</p>
     </div>
     <div class="process-row">
-      <div class="process-step">
-        <div class="step-circle">🌳</div>
-        <div class="step-num">01</div>
-        <div class="step-name">Selección</div>
-        <p class="step-desc">Semillas escogidas a mano del árbol Theobroma cacao en fincas de confianza.</p>
-      </div>
-      <div class="process-arrow">→</div>
-      <div class="process-step">
-        <div class="step-circle">🫙</div>
-        <div class="step-num">02</div>
-        <div class="step-name">Fermentación</div>
-        <p class="step-desc">Proceso artesanal que desarrolla notas únicas de sabor y aroma profundo.</p>
-      </div>
-      <div class="process-arrow">→</div>
-      <div class="process-step">
-        <div class="step-circle">☀️</div>
-        <div class="step-num">03</div>
-        <div class="step-name">Secado</div>
-        <p class="step-desc">Secado natural al sol conservando propiedades nutricionales esenciales.</p>
-      </div>
-      <div class="process-arrow">→</div>
-      <div class="process-step">
-        <div class="step-circle">🔥</div>
-        <div class="step-num">04</div>
-        <div class="step-name">Tostado</div>
-        <p class="step-desc">Control preciso de temperatura para textura crujiente y aroma sin igual.</p>
-      </div>
+      <div class="process-step"><div class="step-circle">01</div><div class="step-num">01</div><div class="step-name">Seleccion</div><p class="step-desc">Semillas escogidas en fincas de confianza.</p></div>
+      <div class="process-arrow">-></div>
+      <div class="process-step"><div class="step-circle">02</div><div class="step-num">02</div><div class="step-name">Fermentacion</div><p class="step-desc">Desarrollo de sabor y aroma profundo.</p></div>
+      <div class="process-arrow">-></div>
+      <div class="process-step"><div class="step-circle">03</div><div class="step-num">03</div><div class="step-name">Secado</div><p class="step-desc">Secado natural y control de calidad.</p></div>
+      <div class="process-arrow">-></div>
+      <div class="process-step"><div class="step-circle">04</div><div class="step-num">04</div><div class="step-name">Tostado</div><p class="step-desc">Temperatura precisa para textura crujiente.</p></div>
     </div>
   </section>
 
-  <!-- PEDIDO -->
-  <section class="section cart-panel" id="pedido">
-    <button class="cart-close" onclick="closeCart()" aria-label="Cerrar carrito">×</button>
-    <div class="section-header">
-      <div class="section-eyebrow">Tu carrito</div>
-      <h2 class="section-title">Carrito de compra</h2>
-      <p class="section-sub">Revisa o ajusta tus productos. Tus datos se pedirán únicamente al finalizar la compra.</p>
-    </div>
-    <div class="order-grid">
-      <div class="order-left">
-        <div class="checkout-steps">
-          <div class="checkout-step active" id="step-productos">
-            <span>1</span>
-            <p>Productos</p>
-          </div>
-          <div class="checkout-line"></div>
-          <div class="checkout-step" id="step-datos">
-            <span>2</span>
-            <p>Tus datos</p>
-          </div>
-        </div>
-
-        <div class="order-section-title">Productos en el carrito</div>
-        <p class="cart-empty" id="cart-empty">Tu carrito está vacío. Agrega productos desde el catálogo para verlos aquí.</p>
-        <div class="prod-row" data-product="nat">
-          <div class="prod-row-icon prod-icon-nat">🌿</div>
-          <div class="prod-row-info">
-            <p class="prod-row-name">Cacao natural</p>
-            <p class="prod-row-price">$12.50 / 500g · Sin procesar · Alto en antioxidantes</p>
-          </div>
-          <div class="qty-ctrl">
-            <button class="qty-btn" onclick="changeQty('nat',-1)">−</button>
-            <span class="qty-num" id="qty-nat">0</span>
-            <button class="qty-btn" onclick="changeQty('nat',1)">+</button>
-          </div>
-        </div>
-        <div class="prod-row" data-product="fer">
-          <div class="prod-row-icon prod-icon-fer">🫙</div>
-          <div class="prod-row-info">
-            <p class="prod-row-name">Cacao fermentado</p>
-            <p class="prod-row-price">$16.00 / 500g · Afrutado · Artesanal · <span class="tag-pill">Más pedido</span></p>
-          </div>
-          <div class="qty-ctrl">
-            <button class="qty-btn" onclick="changeQty('fer',-1)">−</button>
-            <span class="qty-num" id="qty-fer">0</span>
-            <button class="qty-btn" onclick="changeQty('fer',1)">+</button>
-          </div>
-        </div>
-        <div class="prod-row" data-product="tos">
-          <div class="prod-row-icon prod-icon-tos">🔥</div>
-          <div class="prod-row-info">
-            <p class="prod-row-name">Cacao tostado</p>
-            <p class="prod-row-price">$19.00 / 500g · Tostado controlado · Aroma intenso · <span class="tag-pill">Premium</span></p>
-          </div>
-          <div class="qty-ctrl">
-            <button class="qty-btn" onclick="changeQty('tos',-1)">−</button>
-            <span class="qty-num" id="qty-tos">0</span>
-            <button class="qty-btn" onclick="changeQty('tos',1)">+</button>
-          </div>
-        </div>
-
-        <div class="checkout-details" id="checkout-details">
-          <div class="order-section-title" style="margin-top:24px">Tus datos</div>
-          <p class="checkout-helper">Ya casi está listo. Déjanos un contacto para coordinar disponibilidad, pago y envío.</p>
-          <div class="form-group">
-            <label for="inp-nombre">Nombre completo</label>
-            <input type="text" id="inp-nombre" placeholder="Tu nombre completo">
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="inp-email">Correo electrónico</label>
-              <input type="email" id="inp-email" placeholder="correo@ejemplo.com">
-            </div>
-            <div class="form-group">
-              <label for="inp-tel">Teléfono / WhatsApp</label>
-              <input type="tel" id="inp-tel" placeholder="+503 0000-0000">
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="inp-pais">País</label>
-            <input type="text" id="inp-pais" placeholder="El Salvador…">
-          </div>
-          <div class="form-group">
-            <label for="inp-notas">Notas adicionales</label>
-            <textarea id="inp-notas" placeholder="Presentación especial, fecha de entrega, etc." rows="3"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <div class="order-summary">
-        <div class="order-section-title">Resumen del carrito</div>
-        <div class="summary-purchase">
-          <p class="summary-purchase-title">Tipo de compra</p>
-          <div class="purchase-options">
-            <label class="purchase-option active" onclick="setOrderType('personal')">
-              <input type="radio" name="tipoPedido" value="personal" checked onchange="setOrderType('personal')">
-              <span>
-                <strong>Consumo</strong>
-                <small>Personal o familiar.</small>
-              </span>
-            </label>
-            <label class="purchase-option featured" onclick="setOrderType('mayoreo')">
-              <input type="radio" name="tipoPedido" value="mayoreo" onchange="setOrderType('mayoreo')">
-              <span>
-                <strong>Mayoreo</strong>
-                <small>Tiendas, cafeterías o reventa.</small>
-              </span>
-            </label>
-            <label class="purchase-option" onclick="setOrderType('exportacion')">
-              <input type="radio" name="tipoPedido" value="exportacion" onchange="setOrderType('exportacion')">
-              <span>
-                <strong>Exportación</strong>
-                <small>Coordinación internacional.</small>
-              </span>
-            </label>
-          </div>
-        </div>
-        <div id="resumen-items">
-          <p class="resumen-empty">Agrega productos para ver el resumen</p>
-        </div>
-        <div class="summary-totals">
-          <div class="total-row">
-            <span class="total-label">Subtotal</span>
-            <span class="total-val" id="subtotal">$0.00</span>
-          </div>
-          <div class="total-row">
-            <span class="total-label">Envío</span>
-            <span class="total-val" id="envio">A coordinar</span>
-          </div>
-          <div class="total-row">
-            <span class="total-label">Modalidad</span>
-            <span class="total-val" id="tipo-seleccionado">Consumo</span>
-          </div>
-          <div class="total-row total-final-row">
-            <span class="total-label-final">Total estimado</span>
-            <span class="total-final" id="total">$0.00</span>
-          </div>
-        </div>
-        <button class="confirm-btn" id="btn-confirmar" onclick="handleCheckoutAction()">
-          Agrega productos para continuar
-        </button>
-        <p class="order-note">Al confirmar recibirás respuesta por WhatsApp o correo. Tierra Dorada verificará disponibilidad y coordinará el envío.</p>
-
-        <!-- Confirmación -->
-        <div id="order-success" class="order-success" style="display:none">
-          <div class="success-icon">✓</div>
-          <p class="success-title">¡Pedido enviado!</p>
-          <p class="success-sub">Te contactaremos pronto para confirmar tu pedido y coordinar el envío.</p>
-          <button class="btn-primary" style="margin-top:12px;width:100%" onclick="resetForm()">Hacer otro pedido</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA BAND -->
   <div class="cta-band">
     <div class="cta-text">
-      <h2>¿Listo para exportar sabor salvadoreño?</h2>
-      <p>Pedidos mayoristas, exportación y alianzas comerciales en Centroamérica y el mundo.</p>
+      <h2>Listo para exportar cacao salvadoreno?</h2>
+      <p>Cotiza por saco, contenedor, pais destino y moneda local.</p>
     </div>
     <div class="cta-actions">
       <button class="btn-outline" onclick="goToCart()">Ver carrito</button>
-      <button class="btn-primary" onclick="goToCart()">Contactar ahora</button>
+      <button class="btn-primary" onclick="goToCart()">Cotizar ahora</button>
     </div>
   </div>
 
-  <!-- FOOTER -->
   <footer>
     <div class="footer-brand">
-      <div class="nav-logo" style="margin-bottom:0.75rem">Tierra <span>Dorada</span></div>
-      <p>Tierra Dorada Exportaciones S.A. de C.V.<br>La Unión, El Salvador · Desde 2021<br>"De El Salvador Para El Mundo"</p>
+      <div class="nav-logo logo-mark footer-logo" style="margin-bottom:0.75rem">
+        <img src="img/logo.jpg" alt="Tierra Dorada Exportaciones">
+        <span class="logo-text">Tierra <strong>Dorada</strong></span>
+      </div>
+      <p>Tierra Dorada Exportaciones S.A. de C.V.<br>La Union, El Salvador · Desde 2021<br>"De El Salvador Para El Mundo"</p>
     </div>
     <div class="footer-col">
-      <h4>Productos</h4>
+      <h4>Producto</h4>
       <ul>
-        <li><a href="#producto">Cacao Natural</a></li>
-        <li><a href="#producto">Cacao Fermentado</a></li>
         <li><a href="#producto">Cacao Tostado</a></li>
-        <li><a href="carrito.html">Pedidos Mayoristas</a></li>
+        <li><a href="carrito.html">Cotizacion exportadora</a></li>
       </ul>
     </div>
     <div class="footer-col">
       <h4>Empresa</h4>
       <ul>
         <li><a href="#nosotros">Nosotros</a></li>
-        <li><a href="#nosotros">Misión & Visión</a></li>
-        <li><a href="carrito.html">Exportación</a></li>
+        <li><a href="#exportacion">Exportacion</a></li>
         <li><a href="carrito.html">Contacto</a></li>
       </ul>
     </div>
   </footer>
   <div class="footer-bottom">
-    <p>© 2025 Tierra Dorada Exportaciones S.A. de C.V. — El Salvador</p>
+    <p>(c) 2026 Tierra Dorada Exportaciones S.A. de C.V. - El Salvador</p>
     <p>Calidad · Transparencia · Sostenibilidad</p>
   </div>
 
   <div class="cart-toast" id="cart-toast">Producto agregado al carrito</div>
-
   <script src="js/main.js"></script>
 </body>
 </html>
