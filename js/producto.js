@@ -4,21 +4,23 @@ const products = {
     name: 'Cacao Tostado',
     price: 190.00,
     image: 'img/cacao-tostado.png',
-    eyebrow: 'Etiqueta: Premium Export',
+    images: [
+      'img/cacao-tostado.png',
+      'img/cacao-tostado-detalle-2.png',
+      'img/cacao-tostado-detalle-3.png'
+    ],
     desc: 'Cacao tostado salvadoreno en saco de 50 kg. Tostado controlado para maximo aroma, textura crujiente y sabor intenso. Preparado para exportacion internacional.',
-    tags: ['Etiqueta: Premium', 'Etiqueta: Export', 'Saco 50 kg', 'Max. 400 sacos por contenedor'],
     specs: [
       ['Presentacion', 'Saco de 50 kg'],
       ['Origen', 'El Salvador'],
-      ['Contenedor', 'Hasta 400 sacos'],
-      ['Peso maximo', '20,000 kg'],
-      ['Destino destacado', 'Suecia'],
       ['Precio base', 'USD']
     ]
   }
 };
 
 const currentId = 'tos';
+let galleryIndex = 0;
+let galleryTimer = null;
 const hamburger = document.getElementById('hamburger');
 const mobileMenu = document.getElementById('mobileMenu');
 
@@ -76,22 +78,69 @@ function buyCurrentProduct() {
   window.location.href = `carrito.html?producto=${currentId}`;
 }
 
+function showGalleryImage(index) {
+  const product = products[currentId];
+  const images = product.images || [product.image];
+  const image = document.getElementById('product-image');
+  if (!image || !images.length) return;
+
+  galleryIndex = (index + images.length) % images.length;
+  image.src = images[galleryIndex];
+  image.alt = `${product.name} - vista ${galleryIndex + 1}`;
+  image.classList.remove('is-changing');
+  void image.offsetWidth;
+  image.classList.add('is-changing');
+
+  document.querySelectorAll('.gallery-dot').forEach((dot, dotIndex) => {
+    dot.classList.toggle('active', dotIndex === galleryIndex);
+  });
+}
+
+function renderGalleryDots() {
+  const product = products[currentId];
+  const images = product.images || [product.image];
+  const dots = document.getElementById('product-gallery-dots');
+  if (!dots || images.length <= 1) return;
+
+  dots.innerHTML = images.map((_, index) => (
+    `<button class="gallery-dot${index === 0 ? ' active' : ''}" type="button" aria-label="Ver imagen ${index + 1}" data-gallery-index="${index}"></button>`
+  )).join('');
+
+  dots.querySelectorAll('.gallery-dot').forEach(dot => {
+    dot.addEventListener('click', () => {
+      showGalleryImage(Number(dot.dataset.galleryIndex || 0));
+      startGallery();
+    });
+  });
+}
+
+function startGallery() {
+  const product = products[currentId];
+  const images = product.images || [product.image];
+  if (galleryTimer) clearInterval(galleryTimer);
+  if (images.length <= 1) return;
+
+  galleryTimer = setInterval(() => {
+    showGalleryImage(galleryIndex + 1);
+  }, 5000);
+}
+
 function renderProduct() {
   const product = products[currentId];
   document.title = `${product.name} - Tierra Dorada`;
-  document.getElementById('product-image').src = product.image;
+  document.getElementById('product-image').src = (product.images || [product.image])[0];
   document.getElementById('product-image').alt = product.name;
-  document.getElementById('product-eyebrow').textContent = product.eyebrow;
   document.getElementById('product-title').textContent = product.name;
   document.getElementById('product-desc').textContent = product.desc;
-  document.getElementById('product-price').innerHTML = `$${product.price.toFixed(2)} <span>/ saco 50 kg</span>`;
-  document.getElementById('product-tags').innerHTML = product.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+  document.getElementById('product-price').innerHTML = `$${product.price.toFixed(2)} <span>/ saco</span>`;
   document.querySelector('.product-detail-panel').innerHTML = product.specs.map(([label, value]) => `
     <div>
       <p class="detail-label">${label}</p>
       <strong>${value}</strong>
     </div>
   `).join('');
+  renderGalleryDots();
+  startGallery();
 }
 
 renderProduct();
