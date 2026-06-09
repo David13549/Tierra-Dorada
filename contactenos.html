@@ -74,13 +74,42 @@
   <script>
     const form = document.getElementById('contact-page-form');
     const toast = document.getElementById('cart-toast');
+    function apiUrl(path) {
+      const devOnlyPorts = ['5173', '5500', '5501', '8080'];
+      const isFile = window.location.protocol === 'file:';
+      const isDevStaticServer = ['localhost', '127.0.0.1'].includes(window.location.hostname) && devOnlyPorts.includes(window.location.port);
+      const base = isFile || isDevStaticServer ? 'http://localhost:3000' : '';
+      return `${base}${path}`;
+    }
+
     if (form && toast) {
-      form.addEventListener('submit', event => {
+      form.addEventListener('submit', async event => {
         event.preventDefault();
-        form.reset();
-        toast.textContent = 'Solicitud enviada. Te contactaremos pronto.';
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2400);
+        const button = form.querySelector('button[type="submit"]');
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Enviando...';
+
+        try {
+          const payload = Object.fromEntries(new FormData(form).entries());
+          const response = await fetch(apiUrl('/api/contact'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await response.json();
+          if (!response.ok || !data.ok) throw new Error(data.error || 'No se pudo enviar la solicitud.');
+
+          form.reset();
+          toast.textContent = 'Solicitud enviada. Te contactaremos pronto.';
+        } catch (error) {
+          toast.textContent = error.message;
+        } finally {
+          button.disabled = false;
+          button.textContent = originalText;
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 3200);
+        }
       });
     }
   </script>

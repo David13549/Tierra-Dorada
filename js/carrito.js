@@ -462,7 +462,12 @@ async function sendInvoice(orderPayload) {
   if (!response.ok || !data.ok) {
     throw new Error(data.error || "No se pudo enviar la factura.");
   }
-  return data.invoice;
+  return {
+    ...data.invoice,
+    orderNumber: data.order?.order_number,
+    databaseWarning: data.databaseWarning,
+    emailWarning: data.emailWarning
+  };
 }
 
 async function confirmarPedido() {
@@ -492,8 +497,15 @@ async function confirmarPedido() {
   try {
     const invoice = await sendInvoice(buildInvoicePayload(processorLabel));
     if (invoiceStatus) {
-      invoiceStatus.className = "invoice-status sent";
-      invoiceStatus.textContent = `Factura ${invoice.number} enviada a ${document.getElementById("inp-email").value.trim()}.`;
+      const orderNote = invoice.orderNumber ? ` Pedido ${invoice.orderNumber} registrado.` : "";
+      const databaseNote = invoice.databaseWarning ? ` BD: ${invoice.databaseWarning}` : "";
+      if (invoice.emailWarning) {
+        invoiceStatus.className = "invoice-status error";
+        invoiceStatus.textContent = `Pedido guardado en base de datos.${orderNote} El correo no se pudo enviar: ${invoice.emailWarning}${databaseNote}`;
+      } else {
+        invoiceStatus.className = "invoice-status sent";
+        invoiceStatus.textContent = `Factura ${invoice.number} enviada a ${document.getElementById("inp-email").value.trim()}.${orderNote}${databaseNote}`;
+      }
     }
   } catch (error) {
     if (invoiceStatus) {
