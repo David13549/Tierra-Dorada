@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contacto - Tierra Dorada</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav id="navbar">
+    <div class="nav-logo logo-mark" onclick="window.location.href='../index.html'">
+      <img src="../img/logo.jpg" alt="Tierra Dorada Exportaciones">
+      <span class="logo-text">Tierra <strong>Dorada</strong></span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="../index.html#inicio">Inicio</a></li>
+      <li><a href="../index.html#producto">Producto</a></li>
+      <li><a href="../index.html#exportacion">Exportacion</a></li>
+      <li><a href="../index.html#nosotros">Nosotros</a></li>
+      <li><a href="../index.html#proceso">Nuestro Proceso</a></li>
+    </ul>
+    <button class="nav-cta" onclick="window.location.href='carrito.html'">Carrito <span class="cart-count" id="cart-count">0</span></button>
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu">&#9776;</button>
+  </nav>
+
+  <div class="nav-mobile-menu" id="mobileMenu">
+    <a href="../index.html#inicio" onclick="closeMobile()">Inicio</a>
+    <a href="../index.html#producto" onclick="closeMobile()">Producto</a>
+    <a href="../index.html#exportacion" onclick="closeMobile()">Exportacion</a>
+    <a href="../index.html#nosotros" onclick="closeMobile()">Nosotros</a>
+    <a href="../index.html#proceso" onclick="closeMobile()">Proceso</a>
+    <a href="carrito.html" class="mobile-cta" onclick="closeMobile()">Ver carrito</a>
+  </div>
+
+  <main class="contact-help-page">
+    <section class="contact-help-shell">
+      <a class="policy-back-link" href="../index.html">&lt;- Volver al sitio</a>
+      <h1>Como te podemos ayudar?</h1>
+      <p class="contact-help-sub">Completa el formulario y guardaremos tu solicitud para darle seguimiento desde Tierra Dorada Exportaciones.</p>
+
+      <form class="contact-help-form" id="contact-page-form">
+        <div class="contact-field select-field">
+          <select id="contact-topic" name="topic" required>
+            <option value="" selected disabled>Selecciona tu razon de contacto</option>
+            <option value="Cotizacion exportadora">Cotizacion exportadora</option>
+            <option value="Informacion del producto">Informacion del producto</option>
+            <option value="Logistica y documentacion">Logistica y documentacion</option>
+            <option value="Facturacion o comprobante">Facturacion o comprobante</option>
+            <option value="Politicas y privacidad">Politicas y privacidad</option>
+          </select>
+        </div>
+
+        <label class="contact-field" for="contact-name">
+          <input id="contact-name" name="name" type="text" placeholder="Nombre" required>
+          <span class="field-check" aria-hidden="true">âœ“</span>
+        </label>
+
+        <label class="contact-field" for="contact-email">
+          <input id="contact-email" name="email" type="email" placeholder="Email" required>
+          <span class="field-check" aria-hidden="true">âœ“</span>
+        </label>
+
+        <label class="contact-field" for="contact-phone">
+          <input id="contact-phone" name="phone" type="tel" placeholder="Telefono" required>
+          <span class="field-check" aria-hidden="true">âœ“</span>
+        </label>
+
+        <label class="contact-field contact-textarea" for="contact-message">
+          <textarea id="contact-message" name="message" rows="5" placeholder="Comentarios" required></textarea>
+          <span class="field-check" aria-hidden="true">âœ“</span>
+        </label>
+
+        <input type="hidden" name="company" value="">
+        <input type="hidden" name="country" value="">
+        <input type="hidden" name="volume" value="">
+
+        <button class="contact-submit" type="submit">Enviar solicitud</button>
+        <p class="contact-form-status" id="contact-form-status" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+
+  <div class="cart-toast" id="cart-toast">Solicitud enviada</div>
+  <script src="../js/main.js"></script>
+  <script>
+    const form = document.getElementById('contact-page-form');
+    const toast = document.getElementById('cart-toast');
+    const statusText = document.getElementById('contact-form-status');
+
+    function apiUrl(path) {
+      const devOnlyPorts = ['5173', '5500', '5501', '8080'];
+      const isFile = window.location.protocol === 'file:';
+      const isDevStaticServer = ['localhost', '127.0.0.1'].includes(window.location.hostname) && devOnlyPorts.includes(window.location.port);
+      const base = isFile || isDevStaticServer ? 'http://localhost:3000' : '';
+      return `${base}${path}`;
+    }
+
+    function showStatus(message, type) {
+      if (!statusText) return;
+      statusText.textContent = message;
+      statusText.className = `contact-form-status ${type}`;
+    }
+
+    if (form && toast) {
+      form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const button = form.querySelector('button[type="submit"]');
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Enviando...';
+        showStatus('Guardando tu solicitud...', 'pending');
+
+        try {
+          const payload = Object.fromEntries(new FormData(form).entries());
+          const response = await fetch(apiUrl('/api/contact'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const text = await response.text();
+          const data = text ? JSON.parse(text) : {};
+          if (!response.ok || !data.ok) throw new Error(data.error || 'No se pudo enviar la solicitud.');
+
+          form.reset();
+          showStatus('Solicitud enviada y guardada correctamente.', 'sent');
+          toast.textContent = 'Solicitud enviada. Te contactaremos pronto.';
+        } catch (error) {
+          showStatus(error.message, 'error');
+          toast.textContent = error.message;
+        } finally {
+          button.disabled = false;
+          button.textContent = originalText;
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 3200);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
+
+
+

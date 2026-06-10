@@ -1,4 +1,4 @@
-const http = require('http');
+﻿const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
@@ -234,6 +234,7 @@ async function saveContactToSupabase(contact) {
     full_name: String(contact.name || '').trim(),
     company: String(contact.company || '').trim() || null,
     email: String(contact.email || '').trim(),
+    phone: String(contact.phone || '').trim() || null,
     country: String(contact.country || '').trim() || null,
     volume: String(contact.volume || '').trim() || null,
     topic: String(contact.topic || '').trim() || null,
@@ -543,11 +544,11 @@ const server = http.createServer(async (req, res) => {
       const protocol = req.headers['x-forwarded-proto'] || 'http';
       const requestBaseUrl = `${protocol}://${req.headers.host}`;
 
-      // 1. Genera numero, QR y HTML de factura — siempre
+      // 1. Genera numero, QR y HTML de factura â€” siempre
       const prepared = await prepareInvoice(order, requestBaseUrl);
       const { invoice } = prepared;
 
-      // 2. Guarda en Supabase — independiente del email
+      // 2. Guarda en Supabase â€” independiente del email
       let savedOrder = null;
       let databaseWarning = null;
       try {
@@ -556,7 +557,7 @@ const server = http.createServer(async (req, res) => {
         databaseWarning = databaseError.message;
       }
 
-      // 3. Envia email — si falla el pedido ya esta guardado
+      // 3. Envia email â€” si falla el pedido ya esta guardado
       let emailWarning = null;
       try {
         await dispatchInvoiceEmail(order, invoice, prepared.html, prepared.qrBase64, prepared.qrCid, prepared.logoCid, prepared.logoPath);
@@ -601,7 +602,7 @@ const server = http.createServer(async (req, res) => {
 
 server.on('error', error => {
   if (error.code === 'EADDRINUSE') {
-    console.error(`El puerto ${PORT} ya esta en uso. Abre http://localhost:${PORT}/carrito.html si el servidor ya esta corriendo, o ejecuta: npm run start:3001`);
+    console.error(`El puerto ${PORT} ya esta en uso. Abre http://localhost:${PORT}/Frontend/carrito.html si el servidor ya esta corriendo, o ejecuta: npm run start:3001`);
     process.exit(1);
   }
   throw error;
@@ -610,3 +611,4 @@ server.on('error', error => {
 server.listen(PORT, () => {
   console.log(`Tierra Dorada backend running at http://localhost:${PORT}`);
 });
+

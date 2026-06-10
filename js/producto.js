@@ -3,11 +3,11 @@ const products = {
   tos: {
     name: 'Cacao Tostado',
     price: 190.00,
-    image: 'img/cacao-tostado.png',
+    image: '../img/cacao-tostado.png',
     images: [
-      'img/cacao-tostado.png',
-      'img/cacao-tostado-detalle-2.png',
-      'img/cacao-tostado-detalle-3.png'
+      '../img/cacao-tostado.png',
+      '../img/cacao-tostado-detalle-2.png',
+      '../img/cacao-tostado-detalle-3.png'
     ],
     desc: 'Cacao tostado salvadoreno en saco de 50 kg. Tostado controlado para maximo aroma, textura crujiente y sabor intenso. Preparado para exportacion internacional.',
     specs: [
@@ -20,7 +20,6 @@ const products = {
 
 const currentId = 'tos';
 let galleryIndex = 0;
-let galleryTimer = null;
 const hamburger = document.getElementById('hamburger');
 const mobileMenu = document.getElementById('mobileMenu');
 
@@ -109,20 +108,8 @@ function renderGalleryDots() {
   dots.querySelectorAll('.gallery-dot').forEach(dot => {
     dot.addEventListener('click', () => {
       showGalleryImage(Number(dot.dataset.galleryIndex || 0));
-      startGallery();
     });
   });
-}
-
-function startGallery() {
-  const product = products[currentId];
-  const images = product.images || [product.image];
-  if (galleryTimer) clearInterval(galleryTimer);
-  if (images.length <= 1) return;
-
-  galleryTimer = setInterval(() => {
-    showGalleryImage(galleryIndex + 1);
-  }, 5000);
 }
 
 function renderProduct() {
@@ -132,7 +119,7 @@ function renderProduct() {
   document.getElementById('product-image').alt = product.name;
   document.getElementById('product-title').textContent = product.name;
   document.getElementById('product-desc').textContent = product.desc;
-  document.getElementById('product-price').innerHTML = `$${product.price.toFixed(2)} <span>/ saco</span>`;
+  document.getElementById('product-price').textContent = `$${product.price.toFixed(2)}`;
   document.querySelector('.product-detail-panel').innerHTML = product.specs.map(([label, value]) => `
     <div>
       <p class="detail-label">${label}</p>
@@ -140,7 +127,6 @@ function renderProduct() {
     </div>
   `).join('');
   renderGalleryDots();
-  startGallery();
 }
 
 renderProduct();

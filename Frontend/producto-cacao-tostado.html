@@ -1,53 +1,54 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Producto - Tierra Dorada</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="../css/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
   <nav id="navbar">
-    <div class="nav-logo logo-mark" onclick="window.location.href='index.html'">
-      <img src="img/logo.jpg" alt="Tierra Dorada Exportaciones">
+    <div class="nav-logo logo-mark" onclick="window.location.href='../index.html'">
+      <img src="../img/logo.jpg" alt="Tierra Dorada Exportaciones">
       <span class="logo-text">Tierra <strong>Dorada</strong></span>
     </div>
     <ul class="nav-links">
-      <li><a href="index.html#producto">Producto</a></li>
-      <li><a href="index.html#exportacion">Exportacion</a></li>
-      <li><a href="index.html#nosotros">Nosotros</a></li>
+      <li><a href="../index.html#inicio">Inicio</a></li>
+      <li><a href="../index.html#producto">Producto</a></li>
+      <li><a href="../index.html#exportacion">Exportacion</a></li>
+      <li><a href="../index.html#nosotros">Nosotros</a></li>
     </ul>
     <button class="nav-cta" onclick="window.location.href='carrito.html'">Carrito <span class="cart-count" id="cart-count">0</span></button>
     <button class="nav-hamburger" id="hamburger" aria-label="Menu">&#9776;</button>
   </nav>
 
   <div class="nav-mobile-menu" id="mobileMenu">
-    <a href="index.html#producto" onclick="closeMobile()">Producto</a>
-    <a href="index.html#exportacion" onclick="closeMobile()">Exportacion</a>
-    <a href="index.html#nosotros" onclick="closeMobile()">Nosotros</a>
+    <a href="../index.html#inicio" onclick="closeMobile()">Inicio</a>
+    <a href="../index.html#producto" onclick="closeMobile()">Producto</a>
+    <a href="../index.html#exportacion" onclick="closeMobile()">Exportacion</a>
+    <a href="../index.html#nosotros" onclick="closeMobile()">Nosotros</a>
     <a href="carrito.html" class="mobile-cta" onclick="closeMobile()">Ver carrito</a>
   </div>
 
   <main class="page-shell">
-    <button class="btn-secondary page-back" onclick="window.location.href='index.html#producto'"><- Volver al catalogo</button>
+    <button class="btn-secondary page-back" onclick="window.location.href='../index.html#producto'"><- Volver al catalogo</button>
 
     <section class="product-detail">
       <div class="product-detail-media">
         <img id="product-image" src="" alt="">
+        <div class="product-gallery-dots" id="product-gallery-dots" aria-label="Cambiar imagen del producto"></div>
       </div>
       <div class="product-detail-info">
 
         <h1 class="section-title" id="product-title">Cacao Tostado</h1>
         <p class="product-detail-desc" id="product-desc"></p>
-        <div class="product-tags" id="product-tags"></div>
-
         <div class="product-detail-panel"></div>
 
         <div class="product-detail-footer">
-          <div class="product-detail-price" id="product-price">$0.00 <span>/ saco</span></div>
+          <div class="product-detail-price" id="product-price">$0.00</div>
           <div class="detail-actions">
             <button class="btn-outline-dark" onclick="addCurrentProduct()">Agregar al carrito</button>
             <button class="btn-primary" onclick="buyCurrentProduct()">Comprar ahora</button>
@@ -58,6 +59,9 @@
   </main>
 
   <div class="cart-toast" id="cart-toast">Producto agregado al carrito</div>
-  <script src="js/producto.js"></script>
+  <script src="../js/producto.js"></script>
 </body>
 </html>
+
+
+
