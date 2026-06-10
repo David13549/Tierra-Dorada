@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -11,11 +11,12 @@
 </head>
 <body>
   <nav id="navbar">
-    <div class="nav-logo logo-mark">
+    <a class="nav-logo logo-mark" href="#inicio" aria-label="Volver al inicio">
       <img src="img/logo.jpg" alt="Tierra Dorada Exportaciones">
       <span class="logo-text">Tierra <strong>Dorada</strong></span>
-    </div>
+    </a>
     <ul class="nav-links">
+      <li><a href="#inicio">Inicio</a></li>
       <li><a href="#producto">Producto</a></li>
       <li><a href="#exportacion">Exportacion</a></li>
       <li><a href="#nosotros">Nosotros</a></li>
@@ -26,18 +27,19 @@
   </nav>
 
   <div class="nav-mobile-menu" id="mobileMenu">
+    <a href="#inicio" onclick="closeMobile()">Inicio</a>
     <a href="#producto" onclick="closeMobile()">Producto</a>
     <a href="#exportacion" onclick="closeMobile()">Exportacion</a>
     <a href="#nosotros" onclick="closeMobile()">Nosotros</a>
     <a href="#proceso" onclick="closeMobile()">Proceso</a>
-    <a href="carrito.html" class="mobile-cta" onclick="closeMobile()">Ver carrito</a>
+    <a href="Frontend/carrito.html" class="mobile-cta" onclick="closeMobile()">Ver carrito</a>
   </div>
 
   <section class="hero" id="inicio">
     <div class="hero-text">
-      <div class="pill-origin">El Salvador · Theobroma cacao</div>
+      <div class="pill-origin">El Salvador Â· Theobroma cacao</div>
       <div class="hero-badge">De El Salvador Para El Mundo</div>
-      <h1 class="hero-title">Cacao tostado<br>salvadoreño<br><em>para exportacion.</em></h1>
+      <h1 class="hero-title">Cacao tostado<br>salvadoreÃ±o<br><em>para exportacion.</em></h1>
       <p class="hero-sub">Un solo producto: cacao tostado en sacos de 50 kg, listo para compradores internacionales.</p>
       <div class="hero-btns">
         <button class="btn-primary" onclick="document.getElementById('producto').scrollIntoView({behavior:'smooth'})">Ver producto</button>
@@ -59,7 +61,7 @@
         </div>
         <div class="hero-mini">
           <div class="hero-mini-num">Origen</div>
-          <div class="hero-mini-label">Cacao salvadoreño seleccionado</div>
+          <div class="hero-mini-label">Cacao salvadoreÃ±o seleccionado</div>
         </div>
       </div>
     </div>
@@ -74,16 +76,9 @@
     <div class="product-grid product-grid-single">
       <div class="product-card product-card-featured" onclick="goToProduct('tos')" role="button" tabindex="0" onkeydown="handleProductCardKey(event, 'tos')">
         <div class="product-img product-img-toast"></div>
-        <div class="product-body">
-          <span class="product-badge product-badge-gold"> Premium Export</span>
+        <div class="product-body">  
           <div class="product-name">Cacao Tostado Premium</div>
-          <p class="product-desc">Tostado controlado para maximo aroma, textura crujiente y sabor intenso. Presentacion exportable en saco de 50 kg.</p>
-          <div class="product-tags">
-            <span class="tag">Premium</span>
-            <span class="tag">Export</span>
-            <span class="tag">Saco 50 kg</span>
-            <span class="tag">Max. 400 sacos</span>
-          </div>
+          <p class="product-desc">Tostado controlado para maximo aroma, textura crujiente y sabor intenso. </p>
           <div class="product-footer">
             <div class="product-price">$190.00</div>
           </div>
@@ -164,7 +159,7 @@
 
   <div class="cta-band">
     <div class="cta-text">
-      <h2>Listo para exportar cacao salvadoreño?</h2>
+      <h2>Listo para exportar cacao salvadoreÃ±o?</h2>
       <p>Cotiza por saco, contenedor, pais destino y moneda local.</p>
     </div>
     <div class="cta-actions">
@@ -174,37 +169,47 @@
 
   <footer>
     <div class="footer-brand">
-      <div class="nav-logo logo-mark footer-logo" style="margin-bottom:0.75rem">
-        <img src="img/logo.jpg" alt="Tierra Dorada Exportaciones">
-        <span class="logo-text">Tierra <strong>Dorada</strong></span>
-      </div>
-      <p>Tierra Dorada Exportaciones S.A. de C.V.<br>La Union, El Salvador · Desde 2021<br>"De El Salvador Para El Mundo"</p>
+      <p>Tierra Dorada Exportaciones S.A. de C.V.<br>La Union, El Salvador Â· Desde 2021<br>"De El Salvador Para El Mundo"</p>
     </div>
     <div class="footer-col">
       <h4>Producto</h4>
       <ul>
         <li><a href="#producto">Cacao Tostado</a></li>
-        <li><a href="carrito.html">Cotizacion exportadora</a></li>
-        <li><a href="#proceso">Proceso</a></li>
       </ul>
+      <div class="footer-social">
+        <span>Siguenos:</span>
+        <div class="footer-social-links">
+          <a href="https://www.instagram.com/tierradoradaexportaciones" aria-label="Instagram Tierra Dorada" title="Instagram">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="5"></rect>
+              <circle cx="12" cy="12" r="4"></circle>
+              <circle cx="17.5" cy="6.5" r="1.2"></circle>
+            </svg>
+          </a>
+          <a href="https://www.facebook.com/tierradoradaexportaciones" aria-label="Facebook Tierra Dorada" title="Facebook">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M14 8h2V4h-3c-3 0-5 2-5 5v2H6v4h2v5h4v-5h3l1-4h-4V9c0-.6.4-1 1-1h1z"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
     </div>
     <div class="footer-col">
-      <h4>Empresa</h4>
+      <h4>PolÃ­ticas</h4>
       <ul>
-        <li><a href="acerca.html" target="_blank" rel="noopener">Acerca de</a></li>
-        <li><a href="politicas.html" target="_blank" rel="noopener">Politicas y privacidad</a></li>
-        <li><a href="contactenos.html" target="_blank" rel="noopener">Contactenos</a></li>
-        <li><a href="#nosotros">Nosotros</a></li>
-        <li><a href="#exportacion">Exportacion</a></li>
+        <li><a href="Frontend/terminos-condiciones.html">Terminos y condiciones de uso</a></li>
+        <li><a href="Frontend/politicas-privacidad.html">Politicas de privacidad</a></li>
+        <li><a href="Frontend/contacto.html">Contactenos</a></li>
       </ul>
     </div>
   </footer>
   <div class="footer-bottom">
     <p>(c) 2026 Tierra Dorada Exportaciones S.A. de C.V. - El Salvador</p>
-    <p>Calidad · Transparencia · Sostenibilidad</p>
+    <p>Calidad Â· Transparencia Â· Sostenibilidad</p>
   </div>
 
   <div class="cart-toast" id="cart-toast">Producto agregado al carrito</div>
   <script src="js/main.js"></script>
 </body>
 </html>
+

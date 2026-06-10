@@ -1,38 +1,40 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Carrito - Tierra Dorada</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="../css/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
   <nav id="navbar">
-    <div class="nav-logo logo-mark" onclick="window.location.href='index.html'">
-      <img src="img/logo.jpg" alt="Tierra Dorada Exportaciones">
+    <div class="nav-logo logo-mark" onclick="window.location.href='../index.html'">
+      <img src="../img/logo.jpg" alt="Tierra Dorada Exportaciones">
       <span class="logo-text">Tierra <strong>Dorada</strong></span>
     </div>
     <ul class="nav-links">
-      <li><a href="index.html#producto">Producto</a></li>
-      <li><a href="index.html#exportacion">Exportacion</a></li>
-      <li><a href="index.html#nosotros">Nosotros</a></li>
+      <li><a href="../index.html#inicio">Inicio</a></li>
+      <li><a href="../index.html#producto">Producto</a></li>
+      <li><a href="../index.html#exportacion">Exportacion</a></li>
+      <li><a href="../index.html#nosotros">Nosotros</a></li>
     </ul>
     <button class="nav-cta" onclick="window.location.href='carrito.html'">Carrito <span class="cart-count" id="cart-count">0</span></button>
     <button class="nav-hamburger" id="hamburger" aria-label="Menu">&#9776;</button>
   </nav>
 
   <div class="nav-mobile-menu" id="mobileMenu">
-    <a href="index.html#producto" onclick="closeMobile()">Producto</a>
-    <a href="index.html#exportacion" onclick="closeMobile()">Exportacion</a>
-    <a href="index.html#nosotros" onclick="closeMobile()">Nosotros</a>
+    <a href="../index.html#inicio" onclick="closeMobile()">Inicio</a>
+    <a href="../index.html#producto" onclick="closeMobile()">Producto</a>
+    <a href="../index.html#exportacion" onclick="closeMobile()">Exportacion</a>
+    <a href="../index.html#nosotros" onclick="closeMobile()">Nosotros</a>
     <a href="carrito.html" class="mobile-cta" onclick="closeMobile()">Ver carrito</a>
   </div>
 
   <main class="page-shell">
-    <button class="btn-secondary page-back" onclick="window.location.href='index.html#producto'"><- Seguir comprando</button>
+    <button class="btn-secondary page-back" onclick="window.location.href='../index.html#producto'"><- Seguir comprando</button>
 
     <section class="section cart-page">
       <div class="section-header">
@@ -112,26 +114,26 @@
             <div class="payment-options">
               <label class="payment-option active" onclick="setPaymentMethod('tarjeta')">
                 <input type="radio" name="formaPago" value="tarjeta" checked>
-                <img src="img/payments-visa.svg" alt="Tarjeta" class="payment-option-img">
+                <img src="../img/payments-visa.svg" alt="Tarjeta" class="payment-option-img">
                 <span><strong>Tarjeta</strong><small>Debito o credito.</small></span>
               </label>
               <label class="payment-option" onclick="setPaymentMethod('paypal')">
                 <input type="radio" name="formaPago" value="paypal">
-                <img src="img/payments-paypal.svg" alt="PayPal" class="payment-option-img">
+                <img src="../img/payments-paypal.svg" alt="PayPal" class="payment-option-img">
                 <span><strong>PayPal</strong><small>Aprobacion digital de prueba.</small></span>
               </label>
               <label class="payment-option" onclick="setPaymentMethod('efectivo')">
                 <input type="radio" name="formaPago" value="efectivo">
-                <img src="img/payments-cash.svg" alt="Efectivo" class="payment-option-img">
+                <img src="../img/payments-cash.svg" alt="Efectivo" class="payment-option-img">
                 <span><strong>Efectivo</strong><small>Pago al coordinar.</small></span>
               </label>
             </div>
             <div class="card-payment-fields" id="card-payment-fields">
               <div class="accepted-payments" id="accepted-card-logos">
                 <span>Aceptamos</span>
-                <img src="img/payments-visa.svg" alt="Visa">
-                <img src="img/payments-mastercard.svg" alt="Mastercard">
-                <img src="img/payments-amex.svg" alt="American Express">
+                <img src="../img/payments-visa.svg" alt="Visa">
+                <img src="../img/payments-mastercard.svg" alt="Mastercard">
+                <img src="../img/payments-amex.svg" alt="American Express">
               </div>
 
               <div id="direct-card-fields">
@@ -145,7 +147,7 @@
 
               <div class="paypal-sandbox-sim" id="paypal-sandbox-sim">
                 <div class="sandbox-copy">
-                  <img src="img/payments-paypal.svg" alt="PayPal" class="sandbox-logo">
+                  <img src="../img/payments-paypal.svg" alt="PayPal" class="sandbox-logo">
                   <div>
                     <strong>Confirmacion con PayPal</strong>
                     <p>Se generara una aprobacion de prueba para validar el flujo de compra.</p>
@@ -190,6 +192,9 @@
     </section>
   </main>
 
-  <script src="js/carrito.js"></script>
+  <script src="../js/carrito.js"></script>
 </body>
 </html>
+
+
+

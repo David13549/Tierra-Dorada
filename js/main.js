@@ -1,4 +1,4 @@
-const hamburger = document.getElementById('hamburger');
+﻿const hamburger = document.getElementById('hamburger');
 const mobileMenu = document.getElementById('mobileMenu');
 
 if (hamburger && mobileMenu) {
@@ -20,11 +20,11 @@ const prices = { tos: 190.00 };
 const productNames = { tos: 'Cacao tostado' };
 
 function goToProduct(product) {
-  window.location.href = `producto.html?producto=${product}`;
+  window.location.href = `Frontend/producto-cacao-tostado.html?producto=${product}`;
 }
 
 function goToCart() {
-  window.location.href = 'carrito.html';
+  window.location.href = 'Frontend/carrito.html';
 }
 
 function getStoredCart() {
@@ -56,7 +56,7 @@ function addProductFromCard(product, shouldGoToCart = false) {
   addStoredProduct(product);
   showCartToast(productNames[product]);
   updateCartCount();
-  if (shouldGoToCart) window.location.href = `carrito.html?producto=${product}`;
+  if (shouldGoToCart) window.location.href = `Frontend/carrito.html?producto=${product}`;
 }
 
 function addToCartAndGo(product) {
@@ -103,3 +103,4 @@ document.querySelectorAll('.product-card, .value-card, .process-step, .mv-card, 
   el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
   observer.observe(el);
 });
+

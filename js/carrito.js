@@ -10,7 +10,7 @@ const products = {
   tos: {
     name: "Cacao tostado",
     price: 190.00,
-    image: "img/cacao-tostado.png",
+    image: "../img/cacao-tostado.png",
     description: "Granos de cacao seleccionados y tostados, con aroma intenso y textura crujiente. Presentacion lista para exportacion en sacos de 50 kg."
   }
 };
@@ -450,14 +450,14 @@ async function sendInvoice(orderPayload) {
       body: JSON.stringify(orderPayload)
     });
   } catch {
-    throw new Error("Factura pendiente de envio. Inicia el servidor con npm start y abre http://localhost:3000/carrito.html.");
+    throw new Error("Factura pendiente de envio. Inicia el servidor con npm start y abre http://localhost:3000/Frontend/carrito.html.");
   }
   const text = await response.text();
   let data = {};
   try {
     data = text ? JSON.parse(text) : {};
   } catch {
-    throw new Error("No se recibio respuesta valida del backend. Ejecuta npm start y abre http://localhost:3000/carrito.html.");
+    throw new Error("No se recibio respuesta valida del backend. Ejecuta npm start y abre http://localhost:3000/Frontend/carrito.html.");
   }
   if (!response.ok || !data.ok) {
     throw new Error(data.error || "No se pudo enviar la factura.");
@@ -600,3 +600,4 @@ setCardProcessor("visa");
 setCheckoutView(1);
 renderCart();
 loadRates();
+
