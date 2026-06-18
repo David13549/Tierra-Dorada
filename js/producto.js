@@ -54,7 +54,7 @@ function updateCartBadge() {
 
 function addProduct(id) {
   const cart = getCart();
-  if (cart.tos >= MAX_SACKS) {
+  if ((cart[id] || 0) >= MAX_SACKS) {
     alert('El limite por contenedor es de 400 sacos de 50 kg.');
     return;
   }

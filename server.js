@@ -223,7 +223,7 @@ async function saveOrderToSupabase(order, invoice, requestBaseUrl) {
         html_content: fs.readFileSync(invoicePath, 'utf8'),
         invoice_url: `${getPublicBaseUrl(requestBaseUrl)}/factura/${encodeURIComponent(invoice.number)}`
       }]);
-    } catch { /* no bloquear el flujo si falla el guardado */ }
+    } catch (invoiceErr) { console.error('Supabase invoice save failed:', invoiceErr.message); }
   }
 
   return savedOrder;
@@ -587,7 +587,8 @@ const server = http.createServer(async (req, res) => {
       const savedContact = await saveContactToSupabase(contact);
       sendJson(res, 200, { ok: true, contact: savedContact });
     } catch (error) {
-      sendJson(res, 500, { ok: false, error: error.message });
+      console.error('Contact API error:', error.message);
+      sendJson(res, 500, { ok: false, error: 'Error interno del servidor.' });
     }
     return;
   }

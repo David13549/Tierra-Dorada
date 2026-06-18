@@ -50,6 +50,10 @@ function closeMobile() {
   if (mobileMenu) mobileMenu.classList.remove("open");
 }
 
+function esc(value) {
+  return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
 function formatUsd(value) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
 }
@@ -148,7 +152,7 @@ function setPaymentMethod(method) {
 function populateSelectors() {
   const countrySelect = document.getElementById("country-select");
   const currencySelect = document.getElementById("currency-select");
-  if(!countrySelect) return;
+  if(!countrySelect || !currencySelect) return;
   countrySelect.innerHTML = countries.map(([country, currency]) => `<option value="${country}|${currency}">${country} (${currency})</option>`).join("");
   const currencies = [...new Set([...Object.keys(FALLBACK_RATES), ...countries.map(([, currency]) => currency)])].sort();    
   currencySelect.innerHTML = currencies.map(currency => `<option value="${currency}">${currency}</option>`).join("");        
@@ -315,7 +319,6 @@ function renderCart() {
         <div class="prod-row-info">
           <p class="prod-row-name">${products[id].name}</p>
           <p class="prod-row-price">${formatUsd(products[id].price)} / saco de 50 kg</p>
-          <p class="prod-row-desc">${products[id].description}</p>
         </div>
         <div class="qty-ctrl">
           <label class="qty-label" for="qty-${id}">Sacos</label>
@@ -486,7 +489,7 @@ async function confirmarPedido() {
   document.getElementById("order-success").innerHTML = `
     <div class="success-icon">OK</div>
     <p class="success-title">Pedido enviado</p>
-    <p class="success-sub">Hola <strong>${nombre}</strong>, recibimos tu pedido de <strong>${totalItems()} sacos</strong> para <strong>${currentCountry}</strong>. Total estimado: <strong>${formatUsd(total)}</strong> / <strong>${formatCurrency(localTotal, currentCurrency)}</strong>, pago en <strong>${processorLabel}</strong>.</p>
+    <p class="success-sub">Hola <strong>${esc(nombre)}</strong>, recibimos tu pedido de <strong>${totalItems()} sacos</strong> para <strong>${esc(currentCountry)}</strong>. Total estimado: <strong>${formatUsd(total)}</strong> / <strong>${formatCurrency(localTotal, currentCurrency)}</strong>, pago en <strong>${esc(processorLabel)}</strong>.</p>
     <p class="invoice-status pending" id="${invoiceNoticeId}">Enviando factura electronica al correo del cliente...</p>
     <button class="btn-primary" style="margin-top:14px;width:100%" onclick="resetCart()">Hacer otro pedido</button>
   `;
@@ -555,7 +558,7 @@ function simulatePayPalPayment() {
   const btn = document.querySelector(".paypal-sandbox-btn");
   const status = document.getElementById("paypal-sandbox-status");
   const checkoutButton = document.getElementById("btn-confirmar");
-  if (!btn || !status) return confirmarPedido();
+  if (!btn || !status) return;
 
   btn.disabled = true;
   if (checkoutButton) checkoutButton.disabled = true;

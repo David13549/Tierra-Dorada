@@ -2002,8 +2002,8 @@ p {
   display: block;
 }
 
-/* Step/Value icons (01, 02, etc) */
-.step-num, .value-icon {
+/* Value icons decorative overlay */
+.value-icon {
   font-weight: 900;
   opacity: 0.15;
   font-style: italic;
