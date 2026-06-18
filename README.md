@@ -1,28 +1,47 @@
-﻿# Tierra Dorada Exportaciones â€” Sitio Web
+# Tierra Dorada Exportaciones — Sitio Web
+
+Sitio web institucional y de ventas para **Tierra Dorada Exportaciones S.A. de C.V.**, empresa exportadora de cacao tostado desde La Unión, El Salvador.
+
+---
 
 ## Estructura del proyecto
 
 ```
-tierra_dorada/
-â”œâ”€â”€ index.html          # PÃ¡gina principal
-â”œâ”€â”€ css/
-â”‚   â””â”€â”€ styles.css      # Todos los estilos
-â”œâ”€â”€ js/
-â”‚   â””â”€â”€ main.js         # LÃ³gica e interactividad
-â”œâ”€â”€ img/                # Carpeta para tus imÃ¡genes
-â””â”€â”€ README.md
+Tierra-Dorada/
+├── index.html                  # Página principal (landing)
+├── server.js                   # Backend Node.js (factura, correo, Supabase)
+├── package.json
+├── .env                        # Variables de entorno (no se sube al repo)
+├── css/
+│   └── styles.css              # Todos los estilos (responsive incluido)
+├── js/
+│   ├── main.js                 # Interactividad de la landing (carrito, toast)
+│   ├── carrito.js              # Lógica completa del checkout
+│   └── producto.js             # Galería y carrito de la página de producto
+├── img/                        # Imágenes (logo, productos, íconos de pago)
+├── Frontend/
+│   ├── carrito.html            # Página de carrito y checkout
+│   ├── contacto.html           # Formulario de contacto
+│   ├── producto-cacao-tostado.html
+│   ├── politicas-privacidad.html
+│   └── terminos-condiciones.html
+└── invoices/                   # Facturas HTML generadas (autogenerada)
 ```
 
-## Secciones incluidas
+---
 
-1. **Navbar** â€” fijo con menÃº responsive (hamburguesa en mÃ³vil)
-2. **Hero** â€” presentaciÃ³n principal con tarjetas de datos
-3. **Productos** â€” catÃ¡logo de 3 variedades con precios
-4. **Nosotros** â€” historia, misiÃ³n, visiÃ³n y valores
-5. **Proceso** â€” 4 pasos: selecciÃ³n â†’ fermentaciÃ³n â†’ secado â†’ tostado
-6. **Formulario de pedido** â€” con carrito interactivo y validaciÃ³n
-7. **CTA Band** â€” llamado a exportaciÃ³n
-8. **Footer** â€” links y datos de la empresa
+## Secciones de la landing (index.html)
+
+1. **Navbar** — fijo, con menú responsive (hamburguesa en móvil)
+2. **Hero** — presentación principal con tarjetas de datos clave
+3. **Productos** — catálogo con precio y botón de carrito
+4. **Nosotros** — historia, misión, visión y valores
+5. **Proceso** — 4 pasos: selección → fermentación → secado → tostado
+6. **Exportación** — países destino y convertidor de moneda
+7. **CTA Band** — llamado a exportar
+8. **Footer** — links, políticas y datos de la empresa
+
+---
 
 ## Paleta de colores
 
@@ -35,68 +54,97 @@ tierra_dorada/
 | Mocca    | `#84593D` |
 | Espresso | `#4C2B08` |
 
-## CÃ³mo agregar imÃ¡genes
+---
 
-1. Coloca tus imÃ¡genes en la carpeta `img/`
-2. En `index.html` reemplaza los emojis en `.product-img` con `<img src="img/tu-imagen.jpg" alt="...">`
-3. Para el hero, agrega un `background-image` en `.hero` dentro de `styles.css`
-
-## CÃ³mo integrar con backend / WhatsApp
-
-En `js/main.js`, dentro de `confirmarPedido()`, despuÃ©s de las validaciones puedes:
-
-```javascript
-// Enviar a WhatsApp
-const mensaje = encodeURIComponent(`Pedido #${orderNum}\nNombre: ${nombre}\nProductos: ...\nTotal: $${total}`);
-window.open(`https://wa.me/50300000000?text=${mensaje}`);
-
-// O enviar a un endpoint
-fetch('/api/pedidos', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ nombre, email, tel, items, total })
-});
-```
-
-## Para correr localmente
-
-Solo abre `index.html` en tu navegador. No requiere servidor para la versiÃ³n bÃ¡sica.
-
-## Backend y Supabase
-
-Para el checkout con factura, correo y Supabase, usa el servidor:
+## Cómo correr localmente
 
 ```bash
 npm install
 npm start
 ```
 
-Luego abre `http://localhost:3000`.
+Abre [http://localhost:3000](http://localhost:3000) en el navegador.
 
-La base de datos esta definida en:
+> Sin el servidor, puedes abrir `index.html` directamente, pero el checkout (factura y correo) no funcionará.
 
-```text
+---
+
+## Variables de entorno (.env)
+
+Crea un archivo `.env` en la raíz con:
+
+```env
+# Supabase
+SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key
+
+# SMTP (para envío de facturas por correo)
+SMTP_USER=tucorreo@gmail.com
+SMTP_PASS=tu_app_password
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+
+# Opcional
+INVOICE_FROM_EMAIL=tucorreo@gmail.com
+INVOICE_FROM_NAME=Tierra Dorada Exportaciones
+PUBLIC_BASE_URL=https://tudominio.com
+```
+
+> **La `SUPABASE_SERVICE_ROLE_KEY` solo debe usarse en `server.js`**, nunca en archivos del navegador.
+
+---
+
+## Base de datos (Supabase)
+
+El esquema SQL se encuentra en:
+
+```
 supabase/migrations/202606090001_tierra_dorada_core.sql
 ```
 
-Tablas incluidas:
+Tablas:
 
-- `products`: catalogo de productos.
-- `customers`: compradores/contactos del checkout.
-- `orders`: pedidos exportadores y factura asociada.
-- `order_items`: detalle de productos por pedido.
-- `payments`: metodo y estado del pago simulado.
-- `contact_messages`: solicitudes enviadas desde `contactenos.html`.
+| Tabla              | Descripción                                      |
+|--------------------|--------------------------------------------------|
+| `products`         | Catálogo de productos                            |
+| `customers`        | Compradores/contactos registrados en el checkout |
+| `orders`           | Pedidos con factura y estado                     |
+| `order_items`      | Detalle de productos por pedido                  |
+| `payments`         | Método y estado del pago simulado                |
+| `invoices`         | HTML de la factura electrónica (respaldo)        |
+| `contact_messages` | Solicitudes del formulario de contacto           |
 
-Variables necesarias en `.env` local y en los secretos del hosting/GitHub:
+Ejecuta la migración desde el **SQL Editor de Supabase** o con la CLI:
 
-```env
-SUPABASE_URL=https://tu-proyecto.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key
+```bash
+supabase db push
 ```
 
-La `service_role_key` debe usarse solo en `server.js`, nunca en archivos del navegador. Ejecuta la migracion SQL desde Supabase SQL Editor o con Supabase CLI.
+---
+
+## Flujo del checkout
+
+1. El cliente agrega sacos al carrito y elige país/moneda
+2. Ingresa sus datos de contacto y método de pago (tarjeta / PayPal / efectivo)
+3. Al confirmar, el servidor:
+   - Genera un número de factura y código QR
+   - Guarda el pedido en Supabase (`customers`, `orders`, `order_items`, `payments`)
+   - Guarda la factura HTML en disco (`invoices/`) y en Supabase
+   - Envía la factura al correo del cliente vía SMTP
+4. El cliente puede ver su factura en `/factura/<numero>`
 
 ---
-**Tierra Dorada Exportaciones S.A. de C.V. Â· La UniÃ³n, El Salvador Â· 2026**
 
+## APIs del servidor
+
+| Método | Ruta                | Descripción                                  |
+|--------|---------------------|----------------------------------------------|
+| GET    | `/api/rates`        | Tasas de cambio (USD base, desde open.er-api.com) |
+| POST   | `/api/invoice-email`| Genera y envía la factura electrónica        |
+| POST   | `/api/contact`      | Guarda un mensaje de contacto en Supabase    |
+| GET    | `/factura/:numero`  | Sirve una factura HTML por número            |
+
+---
+
+**Tierra Dorada Exportaciones S.A. de C.V. · La Unión, El Salvador · 2026**
