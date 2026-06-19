@@ -261,20 +261,24 @@ function saveInvoicePdf(invoiceNumber, pdfBuffer) {
 
 async function generatePdf(html) {
   const puppeteer = require('puppeteer');
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-  });
+  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined;
+  let browser;
   try {
+    browser = await puppeteer.launch({
+      headless: true,
+      executablePath,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--single-process'],
+      timeout: 30000
+    });
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30000 });
     return await page.pdf({
       format: 'A4',
       printBackground: true,
       margin: { top: '14mm', bottom: '14mm', left: '12mm', right: '12mm' }
     });
   } finally {
-    await browser.close();
+    if (browser) await browser.close().catch(() => {});
   }
 }
 

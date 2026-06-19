@@ -472,14 +472,14 @@ async function sendInvoice(orderPayload) {
       body: JSON.stringify(orderPayload)
     });
   } catch {
-    throw new Error("Factura pendiente de envio. Inicia el servidor con npm start y abre http://localhost:3000/Frontend/carrito.html.");
+    throw new Error("No se pudo conectar con el servidor. Por favor intenta de nuevo en unos momentos.");
   }
   const text = await response.text();
   let data = {};
   try {
     data = text ? JSON.parse(text) : {};
   } catch {
-    throw new Error("No se recibio respuesta valida del backend. Ejecuta npm start y abre http://localhost:3000/Frontend/carrito.html.");
+    throw new Error("No se recibio respuesta valida del servidor. Por favor intenta de nuevo.");
   }
   if (!response.ok || !data.ok) {
     throw new Error(data.error || "No se pudo enviar la factura.");
