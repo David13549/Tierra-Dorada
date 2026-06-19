@@ -575,36 +575,62 @@ async function prepareInvoice(order, requestBaseUrl) {
 }
 
 async function dispatchInvoiceEmail(order, invoice, html, qrBase64, qrCid, logoCid, logoPath, pdfBuffer) {
-  const fromEmail = process.env.INVOICE_FROM_EMAIL || process.env.SMTP_USER;
   const fromName = process.env.INVOICE_FROM_NAME || 'Tierra Dorada Exportaciones';
-  const transporter = await getTransporter();
 
+  if (process.env.RESEND_API_KEY) {
+    const qrDataUrl = `data:image/png;base64,${qrBase64}`;
+    const logoDataUrl = fs.existsSync(logoPath)
+      ? `data:image/jpeg;base64,${fs.readFileSync(logoPath).toString('base64')}`
+      : '';
+    const emailHtml = buildInvoiceHtml(invoice, order, qrDataUrl, logoDataUrl);
+    const attachments = pdfBuffer
+      ? [{ filename: `${invoice.number}.pdf`, content: pdfBuffer.toString('base64') }]
+      : [];
+    const payload = JSON.stringify({
+      from: `${fromName} <onboarding@resend.dev>`,
+      to: [order.customer.email],
+      subject: `Factura ${invoice.number} - Tierra Dorada`,
+      html: emailHtml,
+      attachments
+    });
+    await new Promise((resolve, reject) => {
+      const req = https.request({
+        hostname: 'api.resend.com',
+        path: '/emails',
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(payload)
+        }
+      }, (res) => {
+        let body = '';
+        res.on('data', chunk => body += chunk);
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) resolve(JSON.parse(body));
+          else reject(new Error(`Resend error ${res.statusCode}: ${body}`));
+        });
+      });
+      req.setTimeout(15000, () => req.destroy(new Error('Resend timeout')));
+      req.on('error', reject);
+      req.write(payload);
+      req.end();
+    });
+    return;
+  }
+
+  const fromEmail = process.env.INVOICE_FROM_EMAIL || process.env.SMTP_USER;
+  const transporter = await getTransporter();
   await transporter.sendMail({
     from: `"${fromName}" <${fromEmail}>`,
     to: order.customer.email,
     subject: `Factura ${invoice.number} - Tierra Dorada`,
     html,
     attachments: [
-      {
-        filename: `${invoice.number}-qr.png`,
-        content: Buffer.from(qrBase64, 'base64'),
-        cid: qrCid
-      },
-      {
-        filename: 'tierra-dorada-logo.jpg',
-        path: logoPath,
-        cid: logoCid
-      },
-      {
-        filename: `${invoice.number}.html`,
-        content: html,
-        contentType: 'text/html; charset=utf-8'
-      },
-      ...(pdfBuffer ? [{
-        filename: `${invoice.number}.pdf`,
-        content: pdfBuffer,
-        contentType: 'application/pdf'
-      }] : [])
+      { filename: `${invoice.number}-qr.png`, content: Buffer.from(qrBase64, 'base64'), cid: qrCid },
+      { filename: 'tierra-dorada-logo.jpg', path: logoPath, cid: logoCid },
+      { filename: `${invoice.number}.html`, content: html, contentType: 'text/html; charset=utf-8' },
+      ...(pdfBuffer ? [{ filename: `${invoice.number}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }] : [])
     ]
   });
 }
