@@ -344,19 +344,28 @@ async function serveInvoice(req, res) {
   res.end('<h1>Factura no encontrada</h1><p>Verifica el codigo QR o el numero de factura.</p>');
 }
 
-function getTransporter() {
+async function getTransporter() {
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
   if (!user || !pass) {
     throw new Error('SMTP no configurado. Define SMTP_USER y SMTP_PASS.');
   }
 
+  const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+  let host = smtpHost;
+  try {
+    const addresses = await new Promise((resolve, reject) => {
+      dns.resolve4(smtpHost, (err, addrs) => err ? reject(err) : resolve(addrs));
+    });
+    if (addresses && addresses[0]) host = addresses[0];
+  } catch { /* usar hostname original si falla */ }
+
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    host,
     port: Number(process.env.SMTP_PORT || 465),
     secure: String(process.env.SMTP_SECURE || 'true') === 'true',
     auth: { user, pass },
-    family: 4
+    tls: { servername: smtpHost, rejectUnauthorized: false }
   });
 }
 
@@ -565,7 +574,7 @@ async function prepareInvoice(order, requestBaseUrl) {
 async function dispatchInvoiceEmail(order, invoice, html, qrBase64, qrCid, logoCid, logoPath, pdfBuffer) {
   const fromEmail = process.env.INVOICE_FROM_EMAIL || process.env.SMTP_USER;
   const fromName = process.env.INVOICE_FROM_NAME || 'Tierra Dorada Exportaciones';
-  const transporter = getTransporter();
+  const transporter = await getTransporter();
 
   await transporter.sendMail({
     from: `"${fromName}" <${fromEmail}>`,
