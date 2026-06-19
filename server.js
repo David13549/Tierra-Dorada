@@ -254,6 +254,63 @@ function saveInvoiceHtml(invoiceNumber, html) {
   fs.writeFileSync(path.join(invoicesDir, `${invoiceNumber}.html`), html, 'utf8');
 }
 
+function saveInvoicePdf(invoiceNumber, pdfBuffer) {
+  const invoicesDir = ensureInvoicesDir();
+  fs.writeFileSync(path.join(invoicesDir, `${invoiceNumber}.pdf`), pdfBuffer);
+}
+
+async function generatePdf(html) {
+  const puppeteer = require('puppeteer');
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+  });
+  try {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+    return await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '14mm', bottom: '14mm', left: '12mm', right: '12mm' }
+    });
+  } finally {
+    await browser.close();
+  }
+}
+
+async function serveInvoicePdf(req, res) {
+  const cleanUrl = decodeURIComponent(req.url.split('?')[0]);
+  const invoiceNumber = path.basename(cleanUrl.replace('/factura/', '').replace(/\/pdf$/, ''));
+  const pdfPath = path.join(ROOT, 'invoices', `${invoiceNumber}.pdf`);
+  const htmlPath = path.join(ROOT, 'invoices', `${invoiceNumber}.html`);
+
+  let pdfBuffer = null;
+
+  if (fs.existsSync(pdfPath)) {
+    pdfBuffer = fs.readFileSync(pdfPath);
+  } else if (fs.existsSync(htmlPath)) {
+    try {
+      pdfBuffer = await generatePdf(fs.readFileSync(htmlPath, 'utf8'));
+      saveInvoicePdf(invoiceNumber, pdfBuffer);
+    } catch (e) {
+      console.error('PDF on-demand failed:', e.message);
+    }
+  }
+
+  if (pdfBuffer) {
+    res.writeHead(200, {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${invoiceNumber}.pdf"`,
+      'Content-Length': pdfBuffer.length
+    });
+    res.end(pdfBuffer);
+    return;
+  }
+
+  res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+  res.end('<h1>Factura PDF no encontrada</h1><p>Verifica el numero de factura.</p>');
+}
+
 async function serveInvoice(req, res) {
   const cleanUrl = decodeURIComponent(req.url.split('?')[0]);
   const invoiceNumber = path.basename(cleanUrl.replace('/factura/', ''));
@@ -295,109 +352,165 @@ function getTransporter() {
   });
 }
 
-function buildInvoiceHtml(invoice, order, qrCid, logoCid) {
+function buildInvoiceHtml(invoice, order, qrCid, logoCid, { webView = false } = {}) {
   const rows = order.items.map(item => `
     <tr>
-      <td style="padding:16px 14px;border-bottom:1px solid #e5e7eb;color:#111827;background:#ffffff;">
-        <strong style="font-size:15px;">${escapeHtml(item.name)}</strong><br>
-        <span style="color:#6b7280;font-size:13px;">Saco de 50 kg para exportacion</span>
+      <td style="padding:12px 10px;border-bottom:1px solid #e5e7eb;color:#111827;background:#ffffff;">
+        <strong style="font-size:14px;">${escapeHtml(item.name)}</strong><br>
+        <span style="color:#6b7280;font-size:12px;">Saco de 50 kg para exportacion</span>
       </td>
-      <td style="padding:16px 14px;border-bottom:1px solid #e5e7eb;text-align:center;color:#111827;background:#ffffff;font-weight:700;">${escapeHtml(item.quantity)}</td>
-      <td style="padding:16px 14px;border-bottom:1px solid #e5e7eb;text-align:right;color:#111827;background:#ffffff;">${formatUsd(item.unitPrice)}</td>
-      <td style="padding:16px 14px;border-bottom:1px solid #e5e7eb;text-align:right;color:#111827;background:#ffffff;font-weight:800;">${formatUsd(item.total)}</td>
+      <td style="padding:12px 8px;border-bottom:1px solid #e5e7eb;text-align:center;color:#111827;background:#ffffff;font-weight:700;font-size:14px;">${escapeHtml(item.quantity)}</td>
+      <td style="padding:12px 8px;border-bottom:1px solid #e5e7eb;text-align:right;color:#111827;background:#ffffff;font-size:14px;">${formatUsd(item.unitPrice)}</td>
+      <td style="padding:12px 10px;border-bottom:1px solid #e5e7eb;text-align:right;color:#111827;background:#ffffff;font-weight:800;font-size:14px;">${formatUsd(item.total)}</td>
     </tr>
   `).join('');
 
   return `
   <!doctype html>
   <html lang="es">
-  <body style="margin:0;background:#f4f7fb;color:#111827;font-family:Arial,Helvetica,sans-serif;color-scheme:light;">
-    <div style="max-width:820px;margin:0 auto;padding:28px 16px;">
-      <div style="background:#ffffff;border:1px solid #d8dee8;border-radius:18px;overflow:hidden;box-shadow:0 18px 45px rgba(15,23,42,0.12);">
-        <div style="background:#0f172a;color:#ffffff;padding:30px 34px;">
-          <table style="width:100%;border-collapse:collapse;">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body { margin:0; background:#f4f7fb; color:#111827; font-family:Arial,Helvetica,sans-serif; }
+      .wrapper { max-width:820px; margin:0 auto; padding:16px 12px; }
+      .card { background:#ffffff; border:1px solid #d8dee8; border-radius:18px; overflow:hidden; box-shadow:0 18px 45px rgba(15,23,42,0.12); }
+      .header { background:#0f172a; color:#ffffff; padding:24px 24px; }
+      .header-table { width:100%; border-collapse:collapse; }
+      .header-text td { vertical-align:middle; }
+      .header-logo { width:108px; text-align:right; vertical-align:middle; }
+      .header-title { margin:0; color:#ffffff; font-size:28px; line-height:1.15; }
+      .header-sub { margin:6px 0 0; color:#dbeafe; font-size:15px; }
+      .body-pad { padding:20px 20px; }
+      .info-table { width:100%; border-collapse:collapse; margin-bottom:20px; background:#f8fafc; border:1px solid #d8dee8; border-radius:14px; overflow:hidden; }
+      .info-data { vertical-align:top; padding:18px; }
+      .info-qr { width:140px; text-align:center; padding:18px; vertical-align:middle; }
+      .cols-table { width:100%; border-collapse:collapse; margin-bottom:16px; }
+      .col-left { width:50%; vertical-align:top; padding-right:6px; }
+      .col-right { width:50%; vertical-align:top; padding-left:6px; }
+      .totals-note { vertical-align:top; padding:0 14px 0 0; color:#475569; font-size:13px; line-height:1.6; }
+      .totals-box { width:320px; vertical-align:top; }
+      .total-row { width:100%; border-collapse:collapse; margin:0 0 8px; }
+      .total-label { color:#e5e7eb; font-size:14px; padding:0; }
+      .total-value { color:#e5e7eb; font-size:14px; font-weight:700; text-align:right; padding:0; }
+      .total-final-label { color:#ffffff; font-size:20px; font-weight:700; padding-top:12px; border-top:1px solid rgba(219,234,254,.35); }
+      .total-final-value { color:#ffffff; font-size:20px; font-weight:800; text-align:right; padding-top:12px; border-top:1px solid rgba(219,234,254,.35); }
+      @media (max-width:600px) {
+        .wrapper { padding:10px 6px !important; }
+        .header { padding:18px 14px !important; }
+        .header-logo { display:block !important; width:100% !important; text-align:left !important; padding-top:14px !important; }
+        .header-text { display:block !important; width:100% !important; }
+        .header-table, .header-table tbody, .header-table tr, .header-table td { display:block !important; width:100% !important; }
+        .header-title { font-size:22px !important; }
+        .header-sub { font-size:13px !important; }
+        .body-pad { padding:14px 12px !important; }
+        .info-table, .info-table tbody, .info-table tr { display:block !important; width:100% !important; }
+        .info-data { display:block !important; width:100% !important; padding:14px 14px 0 !important; box-sizing:border-box !important; }
+        .info-qr { display:block !important; width:100% !important; padding:12px 14px 14px !important; box-sizing:border-box !important; text-align:left !important; }
+        .cols-table, .cols-table tbody, .cols-table tr { display:block !important; width:100% !important; }
+        .col-left, .col-right { display:block !important; width:100% !important; padding:0 !important; margin-bottom:10px !important; }
+        .totals-note { display:block !important; width:100% !important; padding:0 0 12px 0 !important; }
+        .totals-box { display:block !important; width:100% !important; }
+        .totals-table, .totals-table tbody, .totals-table tr { display:block !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="card">
+        <div class="header">
+          <table class="header-table">
             <tr>
-              <td style="vertical-align:middle;">
-                <p style="margin:0 0 8px;color:#93c5fd;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;">Comprobante de compra</p>
-                <h1 style="margin:0;color:#ffffff;font-size:32px;line-height:1.12;">Factura electronica</h1>
-                <p style="margin:8px 0 0;color:#dbeafe;font-size:17px;">Tierra Dorada Exportaciones S.A. de C.V.</p>
+              <td class="header-text">
+                <p style="margin:0 0 6px;color:#93c5fd;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;">Comprobante de compra</p>
+                <h1 class="header-title">Factura electronica</h1>
+                <p class="header-sub">Tierra Dorada Exportaciones S.A. de C.V.</p>
               </td>
-              <td style="width:132px;text-align:right;vertical-align:middle;">
-                <div style="display:inline-block;background:#ffffff;border-radius:14px;padding:8px;border:1px solid rgba(255,255,255,.35);">
-                  <img src="cid:${logoCid}" alt="Tierra Dorada" width="108" style="display:block;width:108px;max-width:108px;height:auto;border-radius:10px;">
+              <td class="header-logo">
+                <div style="display:inline-block;background:#ffffff;border-radius:14px;padding:7px;border:1px solid rgba(255,255,255,.35);">
+                  <img src="cid:${logoCid}" alt="Tierra Dorada" width="90" style="display:block;width:90px;max-width:90px;height:auto;border-radius:10px;">
                 </div>
               </td>
             </tr>
           </table>
         </div>
-        <div style="padding:30px 34px;">
-          <table style="width:100%;border-collapse:collapse;margin-bottom:24px;background:#f8fafc;border:1px solid #d8dee8;border-radius:14px;overflow:hidden;">
+        <div class="body-pad">
+          <table class="info-table">
             <tr>
-              <td style="vertical-align:top;padding:20px;">
-                <p style="margin:0 0 10px;color:#2563eb;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;">Datos de factura</p>
-                <p style="margin:0 0 8px;color:#111827;font-size:15px;"><strong>No. factura:</strong> <span style="color:#1d4ed8;">${escapeHtml(invoice.number)}</span></p>
-                <p style="margin:0 0 8px;color:#111827;font-size:15px;"><strong>Fecha:</strong> ${escapeHtml(invoice.date)}</p>
-                <p style="margin:0;color:#111827;font-size:15px;"><strong>Estado:</strong> <span style="display:inline-block;background:#dcfce7;color:#166534;border-radius:999px;padding:4px 10px;font-weight:800;">${escapeHtml(invoice.status)}</span></p>
+              <td class="info-data">
+                <p style="margin:0 0 8px;color:#2563eb;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;">Datos de factura</p>
+                <p style="margin:0 0 7px;color:#111827;font-size:14px;word-break:break-all;"><strong>No. factura:</strong> <span style="color:#1d4ed8;">${escapeHtml(invoice.number)}</span></p>
+                <p style="margin:0 0 7px;color:#111827;font-size:14px;"><strong>Fecha:</strong> ${escapeHtml(invoice.date)}</p>
+                <p style="margin:0;color:#111827;font-size:14px;"><strong>Estado:</strong> <span style="display:inline-block;background:#dcfce7;color:#166534;border-radius:999px;padding:3px 10px;font-weight:800;">${escapeHtml(invoice.status)}</span></p>
               </td>
-              <td style="width:150px;text-align:center;padding:20px;">
-                <img src="cid:${qrCid}" alt="QR de factura" width="126" height="126" style="display:block;margin:0 auto;background:#ffffff;border:8px solid #ffffff;border-radius:12px;box-shadow:0 8px 18px rgba(15,23,42,0.14);">
-                <p style="margin:8px 0 0;color:#475569;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;">Verificacion QR</p>
+              <td class="info-qr">
+                <img src="cid:${qrCid}" alt="QR de factura" width="118" height="118" style="display:block;margin:0 auto;background:#ffffff;border:7px solid #ffffff;border-radius:10px;box-shadow:0 6px 14px rgba(15,23,42,0.14);">
+                <p style="margin:6px 0 0;color:#475569;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center;">Verificacion QR</p>
               </td>
             </tr>
           </table>
 
-          <table style="width:100%;border-collapse:separate;border-spacing:0 12px;margin-bottom:20px;">
+          <table class="cols-table">
             <tr>
-              <td style="width:50%;vertical-align:top;padding-right:7px;">
-                <div style="background:#ffffff;border:1px solid #d8dee8;border-left:5px solid #2563eb;border-radius:12px;padding:18px;">
-                  <p style="margin:0 0 10px;color:#2563eb;text-transform:uppercase;font-size:12px;letter-spacing:.12em;"><strong>Cliente</strong></p>
-                  <p style="margin:0 0 7px;color:#111827;font-size:17px;font-weight:800;">${escapeHtml(order.customer.name)}</p>
-                  <p style="margin:0 0 7px;color:#334155;font-size:14px;">${escapeHtml(order.customer.email)}</p>
-                  <p style="margin:0;color:#334155;font-size:14px;">${escapeHtml(order.customer.phone || 'Telefono no indicado')}</p>
+              <td class="col-left">
+                <div style="background:#ffffff;border:1px solid #d8dee8;border-left:5px solid #2563eb;border-radius:12px;padding:14px;">
+                  <p style="margin:0 0 8px;color:#2563eb;text-transform:uppercase;font-size:11px;letter-spacing:.12em;"><strong>Cliente</strong></p>
+                  <p style="margin:0 0 6px;color:#111827;font-size:15px;font-weight:800;">${escapeHtml(order.customer.name)}</p>
+                  <p style="margin:0 0 6px;color:#334155;font-size:13px;word-break:break-all;">${escapeHtml(order.customer.email)}</p>
+                  <p style="margin:0;color:#334155;font-size:13px;">${escapeHtml(order.customer.phone || 'Telefono no indicado')}</p>
                 </div>
               </td>
-              <td style="width:50%;vertical-align:top;padding-left:7px;">
-                <div style="background:#ffffff;border:1px solid #d8dee8;border-left:5px solid #10b981;border-radius:12px;padding:18px;">
-                  <p style="margin:0 0 10px;color:#047857;text-transform:uppercase;font-size:12px;letter-spacing:.12em;"><strong>Exportacion</strong></p>
-                  <p style="margin:0 0 7px;color:#111827;font-size:15px;"><strong>Destino:</strong> ${escapeHtml(order.destination.country)} (${escapeHtml(order.destination.currency)})</p>
-                  <p style="margin:0 0 7px;color:#111827;font-size:15px;"><strong>Pago:</strong> ${escapeHtml(order.payment.method)}</p>
-                  <p style="margin:0;color:#111827;font-size:15px;"><strong>Envio:</strong> A coordinar</p>
+              <td class="col-right">
+                <div style="background:#ffffff;border:1px solid #d8dee8;border-left:5px solid #10b981;border-radius:12px;padding:14px;">
+                  <p style="margin:0 0 8px;color:#047857;text-transform:uppercase;font-size:11px;letter-spacing:.12em;"><strong>Exportacion</strong></p>
+                  <p style="margin:0 0 6px;color:#111827;font-size:14px;"><strong>Destino:</strong> ${escapeHtml(order.destination.country)} (${escapeHtml(order.destination.currency)})</p>
+                  <p style="margin:0 0 6px;color:#111827;font-size:14px;"><strong>Pago:</strong> ${escapeHtml(order.payment.method)}</p>
+                  <p style="margin:0;color:#111827;font-size:14px;"><strong>Envio:</strong> A coordinar</p>
                 </div>
               </td>
             </tr>
           </table>
 
-          <table style="width:100%;border-collapse:collapse;border:1px solid #d8dee8;border-radius:12px;overflow:hidden;margin-bottom:22px;background:#ffffff;">
+          <table style="width:100%;border-collapse:collapse;border:1px solid #d8dee8;border-radius:12px;overflow:hidden;margin-bottom:18px;background:#ffffff;">
             <thead>
               <tr style="background:#eef4ff;color:#111827;">
-                <th style="padding:14px;text-align:left;font-size:13px;text-transform:uppercase;letter-spacing:.08em;">Producto</th>
-                <th style="padding:14px;text-align:center;font-size:13px;text-transform:uppercase;letter-spacing:.08em;">Sacos</th>
-                <th style="padding:14px;text-align:right;font-size:13px;text-transform:uppercase;letter-spacing:.08em;">Precio</th>
-                <th style="padding:14px;text-align:right;font-size:13px;text-transform:uppercase;letter-spacing:.08em;">Total</th>
+                <th style="padding:11px 10px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.06em;">Producto</th>
+                <th style="padding:11px 8px;text-align:center;font-size:12px;text-transform:uppercase;letter-spacing:.06em;">Sacos</th>
+                <th style="padding:11px 8px;text-align:right;font-size:12px;text-transform:uppercase;letter-spacing:.06em;">Precio</th>
+                <th style="padding:11px 10px;text-align:right;font-size:12px;text-transform:uppercase;letter-spacing:.06em;">Total</th>
               </tr>
             </thead>
             <tbody>${rows}</tbody>
           </table>
 
-          <table style="width:100%;border-collapse:collapse;margin-bottom:22px;">
+          <table style="width:100%;border-collapse:collapse;margin-bottom:18px;">
             <tr>
-              <td style="vertical-align:top;padding:0 16px 0 0;color:#475569;font-size:13px;line-height:1.6;">
-                <div style="background:#f8fafc;border:1px solid #d8dee8;border-radius:12px;padding:16px;">
-                  <strong style="display:block;color:#111827;margin-bottom:6px;">Nota de exportacion</strong>
+              <td class="totals-note">
+                <div style="background:#f8fafc;border:1px solid #d8dee8;border-radius:12px;padding:14px;">
+                  <strong style="display:block;color:#111827;margin-bottom:5px;">Nota de exportacion</strong>
                   La logistica internacional, documentacion aduanera y terminos finales se coordinan despues de confirmar disponibilidad.
                 </div>
               </td>
-              <td style="width:360px;vertical-align:top;">
-                <div style="background:#0f172a;color:#ffffff;border-radius:14px;padding:20px;">
-                  <p style="display:flex;justify-content:space-between;margin:0 0 10px;color:#e5e7eb;"><span>Subtotal USD</span><strong>${formatUsd(order.totals.subtotalUsd)}</strong></p>
-                  <p style="display:flex;justify-content:space-between;margin:0 0 10px;color:#e5e7eb;"><span>Total moneda local</span><strong>${formatCurrency(order.totals.totalLocal, order.destination.currency)}</strong></p>
-                  <p style="display:flex;justify-content:space-between;margin:0 0 14px;color:#e5e7eb;"><span>Peso total</span><strong>${escapeHtml(order.totals.weightKg.toLocaleString('es-SV'))} kg</strong></p>
-                  <p style="display:flex;justify-content:space-between;margin:0;padding-top:16px;border-top:1px solid rgba(219,234,254,.35);font-size:22px;color:#ffffff;"><span>Total estimado</span><strong>${formatUsd(order.totals.subtotalUsd)}</strong></p>
+              <td class="totals-box">
+                <div style="background:#0f172a;color:#ffffff;border-radius:14px;padding:18px;">
+                  <table style="width:100%;border-collapse:collapse;" class="totals-table">
+                    <tr><td class="total-label">Subtotal USD</td><td class="total-value">${formatUsd(order.totals.subtotalUsd)}</td></tr>
+                    <tr><td class="total-label">Total moneda local</td><td class="total-value">${formatCurrency(order.totals.totalLocal, order.destination.currency)}</td></tr>
+                    <tr><td class="total-label" style="padding-bottom:10px;">Peso total</td><td class="total-value" style="padding-bottom:10px;">${escapeHtml(order.totals.weightKg.toLocaleString('es-SV'))} kg</td></tr>
+                    <tr><td class="total-final-label">Total estimado</td><td class="total-final-value">${formatUsd(order.totals.subtotalUsd)}</td></tr>
+                  </table>
                 </div>
               </td>
             </tr>
           </table>
 
+          ${webView ? `
+          <div style="text-align:center;margin-bottom:16px;">
+            <a href="/factura/${escapeHtml(invoice.number)}/pdf"
+               style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;padding:12px 28px;border-radius:10px;letter-spacing:.04em;">
+              Descargar PDF
+            </a>
+          </div>` : ''}
           <p style="margin:0;color:#64748b;font-size:12px;line-height:1.6;text-align:center;">Esta factura/comprobante fue generado electronicamente por Tierra Dorada Exportaciones.</p>
         </div>
       </div>
@@ -426,13 +539,22 @@ async function prepareInvoice(order, requestBaseUrl) {
   const logoDataUrl = fs.existsSync(logoPath)
     ? `data:image/jpeg;base64,${fs.readFileSync(logoPath).toString('base64')}`
     : '';
-  const publicHtml = buildInvoiceHtml(invoice, order, qrDataUrl, logoDataUrl);
+  const publicHtml = buildInvoiceHtml(invoice, order, qrDataUrl, logoDataUrl, { webView: true });
   saveInvoiceHtml(invoice.number, publicHtml);
 
-  return { invoice, html, qrBase64, qrCid, logoCid, logoPath };
+  let pdfBuffer = null;
+  try {
+    const pdfHtml = buildInvoiceHtml(invoice, order, qrDataUrl, logoDataUrl);
+    pdfBuffer = await generatePdf(pdfHtml);
+    saveInvoicePdf(invoice.number, pdfBuffer);
+  } catch (pdfError) {
+    console.error('PDF generation failed:', pdfError.message);
+  }
+
+  return { invoice, html, qrBase64, qrCid, logoCid, logoPath, pdfBuffer };
 }
 
-async function dispatchInvoiceEmail(order, invoice, html, qrBase64, qrCid, logoCid, logoPath) {
+async function dispatchInvoiceEmail(order, invoice, html, qrBase64, qrCid, logoCid, logoPath, pdfBuffer) {
   const fromEmail = process.env.INVOICE_FROM_EMAIL || process.env.SMTP_USER;
   const fromName = process.env.INVOICE_FROM_NAME || 'Tierra Dorada Exportaciones';
   const transporter = getTransporter();
@@ -457,7 +579,12 @@ async function dispatchInvoiceEmail(order, invoice, html, qrBase64, qrCid, logoC
         filename: `${invoice.number}.html`,
         content: html,
         contentType: 'text/html; charset=utf-8'
-      }
+      },
+      ...(pdfBuffer ? [{
+        filename: `${invoice.number}.pdf`,
+        content: pdfBuffer,
+        contentType: 'application/pdf'
+      }] : [])
     ]
   });
 }
@@ -491,6 +618,76 @@ function fetchRates() {
       request.destroy(new Error('Rate request timed out'));
     });
     request.on('error', reject);
+  });
+}
+
+function paypalConfig() {
+  const clientId = process.env.PAYPAL_CLIENT_ID;
+  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+  const env = process.env.PAYPAL_ENV || 'sandbox';
+  const baseUrl = env === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+  return { clientId, clientSecret, baseUrl, enabled: Boolean(clientId && clientSecret) };
+}
+
+function getPayPalAccessToken() {
+  const config = paypalConfig();
+  const credentials = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64');
+  const body = 'grant_type=client_credentials';
+  return new Promise((resolve, reject) => {
+    const url = new URL(`${config.baseUrl}/v1/oauth2/token`);
+    const req = https.request(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(body)
+      }
+    }, response => {
+      let responseBody = '';
+      response.on('data', chunk => { responseBody += chunk; });
+      response.on('end', () => {
+        try {
+          const data = JSON.parse(responseBody);
+          if (data.access_token) resolve(data.access_token);
+          else reject(new Error(data.error_description || 'No access_token de PayPal'));
+        } catch { reject(new Error('Respuesta invalida de PayPal')); }
+      });
+    });
+    req.setTimeout(10000, () => req.destroy(new Error('PayPal token timeout')));
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+function paypalApiRequest(method, endpoint, payload, accessToken) {
+  const config = paypalConfig();
+  const body = payload && Object.keys(payload).length > 0 ? JSON.stringify(payload) : null;
+  return new Promise((resolve, reject) => {
+    const url = new URL(`${config.baseUrl}${endpoint}`);
+    const headers = {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    };
+    if (body) headers['Content-Length'] = Buffer.byteLength(body);
+    const req = https.request(url, { method, headers }, response => {
+      let responseBody = '';
+      response.on('data', chunk => { responseBody += chunk; });
+      response.on('end', () => {
+        let data = null;
+        try { data = responseBody ? JSON.parse(responseBody) : null; } catch { data = responseBody; }
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          reject(new Error((data && (data.message || data.error_description)) || `PayPal HTTP ${response.statusCode}`));
+          return;
+        }
+        resolve(data);
+      });
+    });
+    req.setTimeout(15000, () => req.destroy(new Error('PayPal API timeout')));
+    req.on('error', reject);
+    if (body) req.write(body);
+    req.end();
   });
 }
 
@@ -560,7 +757,7 @@ const server = http.createServer(async (req, res) => {
       // 3. Envia email â€” si falla el pedido ya esta guardado
       let emailWarning = null;
       try {
-        await dispatchInvoiceEmail(order, invoice, prepared.html, prepared.qrBase64, prepared.qrCid, prepared.logoCid, prepared.logoPath);
+        await dispatchInvoiceEmail(order, invoice, prepared.html, prepared.qrBase64, prepared.qrCid, prepared.logoCid, prepared.logoPath, prepared.pdfBuffer);
       } catch (emailError) {
         emailWarning = emailError.message;
       }
@@ -590,6 +787,53 @@ const server = http.createServer(async (req, res) => {
       console.error('Contact API error:', error.message);
       sendJson(res, 500, { ok: false, error: 'Error interno del servidor.' });
     }
+    return;
+  }
+
+  if (req.url === '/api/paypal/create-order' && req.method === 'POST') {
+    try {
+      const config = paypalConfig();
+      if (!config.enabled) {
+        sendJson(res, 503, { ok: false, error: 'PayPal no configurado. Agrega PAYPAL_CLIENT_ID y PAYPAL_CLIENT_SECRET al .env.' });
+        return;
+      }
+      const body = await readJsonBody(req);
+      const amount = Number(body.amount || 0).toFixed(2);
+      if (Number(amount) <= 0) {
+        sendJson(res, 400, { ok: false, error: 'Monto invalido.' });
+        return;
+      }
+      const accessToken = await getPayPalAccessToken();
+      const order = await paypalApiRequest('POST', '/v2/checkout/orders', {
+        intent: 'CAPTURE',
+        purchase_units: [{ amount: { currency_code: 'USD', value: amount }, description: 'Tierra Dorada - Cacao Tostado' }]
+      }, accessToken);
+      sendJson(res, 200, { ok: true, id: order.id });
+    } catch (error) {
+      sendJson(res, 500, { ok: false, error: error.message });
+    }
+    return;
+  }
+
+  if (req.url === '/api/paypal/capture-order' && req.method === 'POST') {
+    try {
+      const body = await readJsonBody(req);
+      const { orderID } = body;
+      if (!orderID) {
+        sendJson(res, 400, { ok: false, error: 'orderID requerido.' });
+        return;
+      }
+      const accessToken = await getPayPalAccessToken();
+      const capture = await paypalApiRequest('POST', `/v2/checkout/orders/${orderID}/capture`, {}, accessToken);
+      sendJson(res, 200, { ok: true, capture });
+    } catch (error) {
+      sendJson(res, 500, { ok: false, error: error.message });
+    }
+    return;
+  }
+
+  if (req.url.includes('/pdf') && req.url.startsWith('/factura/')) {
+    await serveInvoicePdf(req, res);
     return;
   }
 
