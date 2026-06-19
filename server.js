@@ -352,7 +352,8 @@ function getTransporter() {
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: Number(process.env.SMTP_PORT || 465),
     secure: String(process.env.SMTP_SECURE || 'true') === 'true',
-    auth: { user, pass }
+    auth: { user, pass },
+    family: 4
   });
 }
 
