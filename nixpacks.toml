@@ -1,8 +1,12 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "chromium", "nss", "freetype", "harfbuzz", "ca-certificates", "ttf-dejavu"]
+aptPkgs = ["chromium"]
+
+[variables]
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
+PUPPETEER_EXECUTABLE_PATH = "/usr/bin/chromium"
 
 [phases.install]
 cmds = ["npm install"]
 
 [start]
-cmd = "PUPPETEER_EXECUTABLE_PATH=$(which chromium) node server.js"
+cmd = "node server.js"
