@@ -360,11 +360,14 @@ async function getTransporter() {
     if (addresses && addresses[0]) host = addresses[0];
   } catch { /* usar hostname original si falla */ }
 
+  const port = Number(process.env.SMTP_PORT || 465);
+  const secure = String(process.env.SMTP_SECURE || 'true') === 'true';
   return nodemailer.createTransport({
     host,
-    port: Number(process.env.SMTP_PORT || 465),
-    secure: String(process.env.SMTP_SECURE || 'true') === 'true',
+    port,
+    secure,
     auth: { user, pass },
+    requireTLS: !secure,
     tls: { servername: smtpHost, rejectUnauthorized: false }
   });
 }
