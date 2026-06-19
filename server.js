@@ -578,14 +578,12 @@ async function dispatchInvoiceEmail(order, invoice, html, qrBase64, qrCid, logoC
   const fromName = process.env.INVOICE_FROM_NAME || 'Tierra Dorada Exportaciones';
 
   if (process.env.RESEND_API_KEY) {
-    const qrDataUrl = `data:image/png;base64,${qrBase64}`;
-    const logoDataUrl = fs.existsSync(logoPath)
-      ? `data:image/jpeg;base64,${fs.readFileSync(logoPath).toString('base64')}`
-      : '';
-    const emailHtml = buildInvoiceHtml(invoice, order, qrDataUrl, logoDataUrl);
-    const attachments = pdfBuffer
-      ? [{ filename: `${invoice.number}.pdf`, content: pdfBuffer.toString('base64') }]
-      : [];
+    const emailHtml = buildInvoiceHtml(invoice, order, qrCid, logoCid);
+    const attachments = [
+      { filename: `${invoice.number}-qr.png`, content: Buffer.from(qrBase64, 'base64').toString('base64'), content_id: qrCid },
+      ...(fs.existsSync(logoPath) ? [{ filename: 'tierra-dorada-logo.jpg', content: fs.readFileSync(logoPath).toString('base64'), content_id: logoCid }] : []),
+      ...(pdfBuffer ? [{ filename: `${invoice.number}.pdf`, content: pdfBuffer.toString('base64') }] : [])
+    ];
     const payload = JSON.stringify({
       from: `${fromName} <onboarding@resend.dev>`,
       to: [order.customer.email],
