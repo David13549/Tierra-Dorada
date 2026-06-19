@@ -33,12 +33,15 @@ const cardProcessorLabels = {
   paypal_sandbox: "PayPal"
 };
 
+const PAYPAL_CLIENT_ID = "AUYnf7fc9l89itBtl03GPaUk7GkpcKTMGct97Gla90jnVqO_v9MR6rfVXyxwH26JW09Guh90MJAowbh8";
+
 let checkoutStep = 1;
 let exchangeRates = { ...FALLBACK_RATES };
 let currentCountry = "Suecia";
 let currentCurrency = "SEK";
 let rateSource = "respaldo local";
 let paypalSandboxApproved = false;
+let paypalButtonsRendered = false;
 const hamburger = document.getElementById("hamburger");
 const mobileMenu = document.getElementById("mobileMenu");
 
@@ -60,6 +63,17 @@ function formatUsd(value) {
 
 function formatCurrency(value, currency) {
   return new Intl.NumberFormat("es-SV", { style: "currency", currency }).format(value);
+}
+
+function loadPayPalSDK() {
+  return new Promise((resolve, reject) => {
+    if (window.paypal) { resolve(); return; }
+    const script = document.createElement("script");
+    script.src = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&currency=USD&intent=capture`;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error("No se pudo cargar el SDK de PayPal"));
+    document.head.appendChild(script);
+  });
 }
 
 function apiUrl(path) {
@@ -147,6 +161,7 @@ function setPaymentMethod(method) {
   if (acceptedCards) acceptedCards.style.display = method === "tarjeta" ? "flex" : "none";
   if (paypalSim) paypalSim.style.display = method === "paypal" ? "block" : "none";
   resetSandboxStatus();
+  if (method === "paypal" && checkoutStep === 3) initPayPalButtons();
 }
 
 function populateSelectors() {
@@ -230,6 +245,8 @@ function showPaymentDetails() {
   document.getElementById("step-pago").classList.add("active");
   updateCheckoutButton();
   moveToCheckoutSection(paymentDetails);
+  const selectedPayment = document.querySelector('input[name="formaPago"]:checked')?.value;
+  if (selectedPayment === "paypal") initPayPalButtons();
 }
 
 function moveToCheckoutSection(section, focusId) {
@@ -291,10 +308,12 @@ function updateCheckoutButton() {
   const button = document.getElementById("btn-confirmar");
   const hasProducts = totalItems() > 0;
   const paymentMethod = document.querySelector('input[name="formaPago"]:checked')?.value || "tarjeta";
-  if(!button) return;
+  if (!button) return;
+  const hideButton = checkoutStep === 3 && paymentMethod === "paypal";
+  button.style.display = hideButton ? "none" : "";
   button.disabled = !hasProducts;
   button.textContent = hasProducts
-    ? (checkoutStep === 1 ? "Continuar con mis datos ->" : checkoutStep === 2 ? "Continuar a pago ->" : paymentMethod === "paypal" ? "Confirmar con PayPal ->" : "Confirmar pedido ->")
+    ? (checkoutStep === 1 ? "Continuar con mis datos ->" : checkoutStep === 2 ? "Continuar a pago ->" : "Confirmar pedido ->")
     : "Agrega sacos para continuar";
 }
 
@@ -374,7 +393,7 @@ function handleCheckoutAction() {
     return showPaymentDetails();
   }
   const pago = document.querySelector('input[name="formaPago"]:checked')?.value || "tarjeta";
-  if (pago === "paypal" && !paypalSandboxApproved) return simulatePayPalPayment();
+  if (pago === "paypal") return;
   confirmarPedido();
 }
 
@@ -552,42 +571,65 @@ function setCardProcessor(processor) {
   resetSandboxStatus();
 }
 
-function simulatePayPalPayment() {
+async function initPayPalButtons() {
   if (!validateContact()) return;
-
-  const btn = document.querySelector(".paypal-sandbox-btn");
+  const container = document.getElementById("paypal-buttons-container");
   const status = document.getElementById("paypal-sandbox-status");
-  const checkoutButton = document.getElementById("btn-confirmar");
-  if (!btn || !status) return;
+  if (!container || paypalButtonsRendered) return;
 
-  btn.disabled = true;
-  if (checkoutButton) checkoutButton.disabled = true;
-  btn.textContent = "Conectando con PayPal...";
-  status.textContent = "Conectando con PayPal";
-  status.className = "sandbox-status processing";
-  
-  setTimeout(() => {
-    btn.textContent = "Procesando aprobacion...";
-    status.textContent = "Procesando aprobacion";
-    setTimeout(() => {
-      paypalSandboxApproved = true;
-      status.textContent = "Aprobado por PayPal";
-      status.className = "sandbox-status approved";
-      btn.textContent = "Pago aprobado";
-      if (checkoutButton) checkoutButton.disabled = false;
-      confirmarPedido();
-    }, 1500);
-  }, 1000);
+  container.innerHTML = '<p style="color:#6b7280;font-size:13px;margin:8px 0">Cargando PayPal...</p>';
+
+  try {
+    await loadPayPalSDK();
+    container.innerHTML = "";
+
+    window.paypal.Buttons({
+      style: { layout: "vertical", color: "gold", shape: "rect", label: "paypal" },
+      createOrder: async () => {
+        const subtotal = getSubtotal();
+        const response = await fetch(apiUrl("/api/paypal/create-order"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: subtotal.toFixed(2) })
+        });
+        const data = await response.json();
+        if (!data.ok) throw new Error(data.error || "Error al crear orden PayPal");
+        return data.id;
+      },
+      onApprove: async (data) => {
+        if (status) { status.textContent = "Procesando pago..."; status.className = "sandbox-status processing"; }
+        const response = await fetch(apiUrl("/api/paypal/capture-order"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderID: data.orderID })
+        });
+        const capture = await response.json();
+        if (!capture.ok) throw new Error("Error al capturar pago PayPal");
+        paypalSandboxApproved = true;
+        if (status) { status.textContent = "Pago aprobado"; status.className = "sandbox-status approved"; }
+        confirmarPedido();
+      },
+      onCancel: () => {
+        if (status) { status.textContent = "Pago cancelado. Intenta de nuevo."; status.className = "sandbox-status pending"; }
+      },
+      onError: (err) => {
+        console.error("PayPal error:", err);
+        if (status) { status.textContent = "Error en PayPal. Intenta de nuevo."; status.className = "sandbox-status pending"; }
+      }
+    }).render("#paypal-buttons-container");
+
+    paypalButtonsRendered = true;
+  } catch (err) {
+    container.innerHTML = `<p style="color:#dc2626;font-size:13px;margin:8px 0">Error: ${err.message}</p>`;
+  }
 }
 
 function resetSandboxStatus() {
   paypalSandboxApproved = false;
-  const btn = document.querySelector(".paypal-sandbox-btn");
+  paypalButtonsRendered = false;
+  const container = document.getElementById("paypal-buttons-container");
   const status = document.getElementById("paypal-sandbox-status");
-  if (btn) {
-    btn.disabled = false;
-    btn.textContent = "Confirmar con PayPal";
-  }
+  if (container) container.innerHTML = "";
   if (status) {
     status.textContent = "Pendiente de aprobacion";
     status.className = "sandbox-status pending";
