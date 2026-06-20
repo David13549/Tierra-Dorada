@@ -1,11 +1,7 @@
-﻿const dns = require('dns');
-dns.setDefaultResultOrder('ipv4first');
-
-const http = require('http');
+﻿const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
-const nodemailer = require('nodemailer');
 const QRCode = require('qrcode');
 
 const PORT = process.env.PORT || 3000;
@@ -344,33 +340,6 @@ async function serveInvoice(req, res) {
   res.end('<h1>Factura no encontrada</h1><p>Verifica el codigo QR o el numero de factura.</p>');
 }
 
-async function getTransporter() {
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  if (!user || !pass) {
-    throw new Error('SMTP no configurado. Define SMTP_USER y SMTP_PASS.');
-  }
-
-  const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
-  let host = smtpHost;
-  try {
-    const addresses = await new Promise((resolve, reject) => {
-      dns.resolve4(smtpHost, (err, addrs) => err ? reject(err) : resolve(addrs));
-    });
-    if (addresses && addresses[0]) host = addresses[0];
-  } catch { /* usar hostname original si falla */ }
-
-  const port = Number(process.env.SMTP_PORT || 465);
-  const secure = String(process.env.SMTP_SECURE || 'true') === 'true';
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    auth: { user, pass },
-    requireTLS: !secure,
-    tls: { servername: smtpHost, rejectUnauthorized: false }
-  });
-}
 
 function buildInvoiceHtml(invoice, order, qrCid, logoCid, { webView = false } = {}) {
   const rows = order.items.map(item => `
@@ -576,60 +545,44 @@ async function prepareInvoice(order, requestBaseUrl) {
 
 async function dispatchInvoiceEmail(order, invoice, html, qrBase64, qrCid, logoCid, logoPath, pdfBuffer) {
   const fromName = process.env.INVOICE_FROM_NAME || 'Tierra Dorada Exportaciones';
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) throw new Error('RESEND_API_KEY no configurado.');
 
-  if (process.env.RESEND_API_KEY) {
-    const emailHtml = buildInvoiceHtml(invoice, order, qrCid, logoCid);
-    const attachments = [
-      { filename: `${invoice.number}-qr.png`, content: Buffer.from(qrBase64, 'base64').toString('base64'), content_id: qrCid },
-      ...(fs.existsSync(logoPath) ? [{ filename: 'tierra-dorada-logo.jpg', content: fs.readFileSync(logoPath).toString('base64'), content_id: logoCid }] : []),
-      ...(pdfBuffer ? [{ filename: `${invoice.number}.pdf`, content: pdfBuffer.toString('base64') }] : [])
-    ];
-    const payload = JSON.stringify({
-      from: `${fromName} <onboarding@resend.dev>`,
-      to: [order.customer.email],
-      subject: `Factura ${invoice.number} - Tierra Dorada`,
-      html: emailHtml,
-      attachments
-    });
-    await new Promise((resolve, reject) => {
-      const req = https.request({
-        hostname: 'api.resend.com',
-        path: '/emails',
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(payload)
-        }
-      }, (res) => {
-        let body = '';
-        res.on('data', chunk => body += chunk);
-        res.on('end', () => {
-          if (res.statusCode >= 200 && res.statusCode < 300) resolve(JSON.parse(body));
-          else reject(new Error(`Resend error ${res.statusCode}: ${body}`));
-        });
-      });
-      req.setTimeout(15000, () => req.destroy(new Error('Resend timeout')));
-      req.on('error', reject);
-      req.write(payload);
-      req.end();
-    });
-    return;
-  }
-
-  const fromEmail = process.env.INVOICE_FROM_EMAIL || process.env.SMTP_USER;
-  const transporter = await getTransporter();
-  await transporter.sendMail({
-    from: `"${fromName}" <${fromEmail}>`,
-    to: order.customer.email,
+  const emailHtml = buildInvoiceHtml(invoice, order, qrCid, logoCid);
+  const attachments = [
+    { filename: `${invoice.number}-qr.png`, content: Buffer.from(qrBase64, 'base64').toString('base64'), content_id: qrCid },
+    ...(fs.existsSync(logoPath) ? [{ filename: 'tierra-dorada-logo.jpg', content: fs.readFileSync(logoPath).toString('base64'), content_id: logoCid }] : []),
+    ...(pdfBuffer ? [{ filename: `${invoice.number}.pdf`, content: pdfBuffer.toString('base64') }] : [])
+  ];
+  const payload = JSON.stringify({
+    from: `${fromName} <onboarding@resend.dev>`,
+    to: [order.customer.email],
     subject: `Factura ${invoice.number} - Tierra Dorada`,
-    html,
-    attachments: [
-      { filename: `${invoice.number}-qr.png`, content: Buffer.from(qrBase64, 'base64'), cid: qrCid },
-      { filename: 'tierra-dorada-logo.jpg', path: logoPath, cid: logoCid },
-      { filename: `${invoice.number}.html`, content: html, contentType: 'text/html; charset=utf-8' },
-      ...(pdfBuffer ? [{ filename: `${invoice.number}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }] : [])
-    ]
+    html: emailHtml,
+    attachments
+  });
+  await new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: 'api.resend.com',
+      path: '/emails',
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    }, (res) => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) resolve(JSON.parse(body));
+        else reject(new Error(`Resend error ${res.statusCode}: ${body}`));
+      });
+    });
+    req.setTimeout(15000, () => req.destroy(new Error('Resend timeout')));
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
   });
 }
 
